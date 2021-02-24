@@ -13,6 +13,11 @@ public class MessageHelper {
         return Arrays.copyOfRange(message, NetworkMessages.size, message.length);
     }
 
+    public static String toString(byte[] message){
+        return new String(message, NetworkMessages.size,
+                message.length - NetworkMessages.size, StandardCharsets.US_ASCII);
+    }
+
     public static byte[] getMessage(NetworkMessages type){
         return type.label.getBytes(StandardCharsets.US_ASCII);
     }

@@ -1,13 +1,17 @@
 package com.company.states;
 
 import Network.EndPoint;
+import Network.EndPoints;
 import Network.MessageHelper;
 import Network.NetworkMessages;
 import com.company.Match;
+import com.google.gson.Gson;
 
 import java.net.InetAddress;
 
 public class WaitClientState extends MatchStateBase{
+    private Gson gson = new Gson();
+
     public WaitClientState(Match context) {
         super(context);
     }
@@ -15,10 +19,18 @@ public class WaitClientState extends MatchStateBase{
     @Override
     public void processMessage(InetAddress address, int port, byte[] received) {
         if (MessageHelper.getMessageType(received) == NetworkMessages.HELLO){
-            var endPoint = new EndPoint(address, port);
+            var context = getContext();
+            var publicEndPoint = new EndPoint(address, port);
 
-            if (!isClient(endPoint)){
-                // TODO: добавить конечную точку и порт
+            if (!isClient(publicEndPoint)){
+                var message = MessageHelper.toString(received);
+                var localEndPoint = gson.fromJson(message, EndPoint.class);
+                var endPoints = new EndPoints(publicEndPoint, localEndPoint);
+                context.addClient(endPoints);
+
+                if (context.getIsFull()){
+                    context.setState(new ChooseHostState(getContext()));
+                }
             }
 
             getContext().sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.HELLO));

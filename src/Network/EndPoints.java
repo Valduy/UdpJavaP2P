@@ -13,7 +13,8 @@ public class EndPoints {
     }
 
     public EndPoints(InetAddress publicAddress, int publicPort,
-                    InetAddress privateAddress, int privatePort){
+                    InetAddress privateAddress, int privatePort)
+    {
         this(new EndPoint(publicAddress, publicPort), new EndPoint(privateAddress, privatePort));
     }
 

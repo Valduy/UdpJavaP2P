@@ -10,9 +10,12 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class Match {
-    public final ArrayList<EndPoints> clients = new ArrayList<>();
+    private final ArrayList<EndPoints> clients = new ArrayList<>();
+    private EndPoints host;
 
     private final int playersCount;
     private final int port;
@@ -26,6 +29,23 @@ public class Match {
     private boolean isFailed;
     private boolean isRun;
 
+    public Collection<EndPoints> getClients(){
+        return Collections.unmodifiableCollection(clients);
+    }
+
+    public EndPoints getHost(){
+        return host;
+    }
+
+    public void setHost(EndPoints endPoints){
+        clients.remove(endPoints);
+        host = endPoints;
+    }
+
+    public void setState(MatchStateBase state){
+        this.state = state;
+    }
+
     public boolean getIsCompleted(){
         return isCompleted;
     }
@@ -36,6 +56,12 @@ public class Match {
 
     public boolean getIsRun(){
         return isRun;
+    }
+
+    public boolean getIsFull(){
+        return host == null
+                ? clients.size() == playersCount
+                : clients.size() == playersCount - 1;
     }
 
     public int getPort(){
@@ -78,6 +104,10 @@ public class Match {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void addClient(EndPoints endPoints){
+        clients.add(endPoints);
     }
 
     private void matchLoop(){

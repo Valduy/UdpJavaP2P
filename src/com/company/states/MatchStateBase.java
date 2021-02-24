@@ -19,6 +19,6 @@ public abstract class MatchStateBase {
     public abstract void processMessage(InetAddress address, int port, byte[] received);
 
     protected boolean isClient(EndPoint endPoint){
-        return context.clients.stream().anyMatch(c -> c.publicEndPoint.equals(endPoint));
+        return context.getClients().stream().anyMatch(c -> c.publicEndPoint.equals(endPoint));
     }
 }
