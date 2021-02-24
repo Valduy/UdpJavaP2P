@@ -1,6 +1,6 @@
 package com.company;
 
-import Network.EndPoints;
+import network.EndPoints;
 import com.company.states.MatchStateBase;
 import com.company.states.WaitClientState;
 

@@ -1,9 +1,9 @@
 package com.company;
 
-import Network.EndPoint;
-import Network.MessageHelper;
-import Network.NetworkMessages;
-import Network.UserStatus;
+import network.EndPoint;
+import network.MessageHelper;
+import network.NetworkMessages;
+import network.UserStatus;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

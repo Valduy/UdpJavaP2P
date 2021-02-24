@@ -1,9 +1,9 @@
 package com.company.states;
 
-import Network.EndPoint;
-import Network.EndPoints;
-import Network.MessageHelper;
-import Network.NetworkMessages;
+import network.EndPoint;
+import network.EndPoints;
+import network.MessageHelper;
+import network.NetworkMessages;
 import com.company.Match;
 import com.google.gson.Gson;
 
@@ -33,7 +33,7 @@ public class WaitClientState extends MatchStateBase{
                 }
             }
 
-            getContext().sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.HELLO));
+            context.sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.HELLO));
         }
     }
 }

@@ -1,9 +1,9 @@
 package com.company.states;
 
-import Network.EndPoint;
-import Network.EndPoints;
-import Network.MessageHelper;
-import Network.NetworkMessages;
+import network.EndPoint;
+import network.EndPoints;
+import network.MessageHelper;
+import network.NetworkMessages;
 import com.company.Match;
 
 import java.net.InetAddress;
@@ -20,7 +20,10 @@ public class ChooseHostState extends MatchStateBase {
             var client = getClient(publicEndPoint);
 
             if (client != null){
-                getContext().setHost(client);
+                var context = getContext();
+                context.setHost(client);
+                context.setState(new ConnectClientsState(context));
+                context.sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.HELLO));
             }
         }
     }

@@ -1,4 +1,4 @@
-package Network;
+package network;
 
 public enum NetworkMessages {
     HELLO("HLLO"),

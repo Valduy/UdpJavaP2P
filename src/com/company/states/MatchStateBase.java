@@ -1,6 +1,6 @@
 package com.company.states;
 
-import Network.EndPoint;
+import network.EndPoint;
 import com.company.Match;
 
 import java.net.InetAddress;
