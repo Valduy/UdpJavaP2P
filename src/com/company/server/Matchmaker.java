@@ -46,6 +46,7 @@ public class Matchmaker{
         try {
             isRun = false;
             matchmakerThread.join();
+            System.out.print("Matchmaker stoped!");
         } finally {
             socket.close();
         }
@@ -62,7 +63,9 @@ public class Matchmaker{
         var packet = new DatagramPacket(receive, receive.length);
 
         try{
+            System.out.print("Waiting for request...");
             socket.receive(packet);
+            System.out.print("Message received!");
             var messageType = MessageHelper.getMessageType(packet.getData());
             var userAddress = packet.getAddress();
             var userPort = packet.getPort();
@@ -91,7 +94,7 @@ public class Matchmaker{
     }
 
     private void onHello(InetAddress address, int port) throws IOException {
-        //System.out.printf("Hello from: %s:%s", address.toString(), port);
+        System.out.printf("Hello from: %s:%s", address.toString(), port);
 
         if (getEndPoint(address, port) != null){
             waitingPlayers.add(new EndPoint(address, port));
@@ -103,6 +106,7 @@ public class Matchmaker{
     }
 
     private void onBye(InetAddress address, int port){
+        System.out.printf("Bye from: %s:%s", address.toString(), port);
         var endPoint = getEndPoint(address, port);
 
         if (endPoint != null){
@@ -111,6 +115,7 @@ public class Matchmaker{
     }
 
     private void onInfo(InetAddress address, int port) throws IOException {
+        System.out.printf("Info request from: %s:%s", address.toString(), port);
         UserStatus status = UserStatus.ABSN;
 
         if (getEndPoint(address, port) != null){
@@ -128,6 +133,7 @@ public class Matchmaker{
     }
 
     private void onInitial(InetAddress address, int port) throws IOException {
+        System.out.printf("Initial request from: %s:%s", address.toString(), port);
         var match = playerToMatch.get(new EndPoint(address, port));
 
         if (match != null){
