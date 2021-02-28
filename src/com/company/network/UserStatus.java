@@ -1,4 +1,4 @@
-package network;
+package com.company.network;
 
 public enum UserStatus{
     Wait("WAIT"),

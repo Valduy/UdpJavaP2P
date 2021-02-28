@@ -1,4 +1,4 @@
-package network;
+package com.company.network;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

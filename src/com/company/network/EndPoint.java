@@ -1,4 +1,4 @@
-package network;
+package com.company.network;
 
 import java.net.InetAddress;
 import java.util.Objects;

@@ -1,7 +1,7 @@
-package com.company.states;
+package com.company.server.states;
 
-import network.EndPoint;
-import com.company.Match;
+import com.company.network.EndPoint;
+import com.company.server.Match;
 
 import java.net.InetAddress;
 

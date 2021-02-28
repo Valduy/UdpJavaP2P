@@ -1,8 +1,8 @@
-package com.company.states;
+package com.company.server.states;
 
-import com.company.Match;
+import com.company.server.Match;
 import com.google.gson.Gson;
-import network.*;
+import com.company.network.*;
 
 import java.net.InetAddress;
 import java.util.ArrayList;

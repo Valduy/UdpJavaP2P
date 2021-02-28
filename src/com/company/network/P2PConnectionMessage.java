@@ -1,4 +1,4 @@
-package network;
+package com.company.network;
 
 import java.util.List;
 

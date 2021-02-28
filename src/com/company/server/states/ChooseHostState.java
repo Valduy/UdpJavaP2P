@@ -1,10 +1,10 @@
-package com.company.states;
+package com.company.server.states;
 
-import network.EndPoint;
-import network.EndPoints;
-import network.MessageHelper;
-import network.NetworkMessages;
-import com.company.Match;
+import com.company.network.EndPoint;
+import com.company.network.EndPoints;
+import com.company.network.MessageHelper;
+import com.company.network.NetworkMessages;
+import com.company.server.Match;
 
 import java.net.InetAddress;
 

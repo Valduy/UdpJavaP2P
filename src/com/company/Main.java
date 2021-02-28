@@ -1,10 +1,10 @@
 package com.company;
 
+import com.company.server.Matchmaker;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 public class Main {
 

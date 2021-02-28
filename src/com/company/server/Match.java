@@ -1,8 +1,8 @@
-package com.company;
+package com.company.server;
 
-import network.EndPoints;
-import com.company.states.MatchStateBase;
-import com.company.states.WaitClientState;
+import com.company.network.EndPoints;
+import com.company.server.states.MatchStateBase;
+import com.company.server.states.WaitClientState;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
