@@ -3,6 +3,8 @@ package com.company.server;
 import com.company.network.EndPoints;
 import com.company.server.states.MatchStateBase;
 import com.company.server.states.WaitClientState;
+import events.EventArgs;
+import events.EventHandler;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -15,6 +17,7 @@ import java.util.Collections;
 
 public class Match {
     private final ArrayList<EndPoints> clients = new ArrayList<>();
+    private final EventHandler<EventArgs> ended = new EventHandler<>();
     private EndPoints host;
 
     private final int playersCount;
@@ -36,6 +39,10 @@ public class Match {
 
     public EndPoints getHost(){
         return host;
+    }
+
+    public EventHandler<EventArgs> getEnded(){
+        return ended;
     }
 
     public void setHost(EndPoints endPoints){
@@ -114,6 +121,7 @@ public class Match {
         }
 
         isCompleted = true;
+        ended.invoke(this, new EventArgs());
     }
 
     private void matchFrame(){
