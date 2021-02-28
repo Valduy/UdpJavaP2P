@@ -158,6 +158,12 @@ public class Matchmaker{
     }
 
     private void checkMatches(){
+        for (var match : matches){
+
+        }
+    }
+
+    private void getEndedMatches(){
 
     }
 }

@@ -19,14 +19,15 @@ public class Match {
 
     private final int playersCount;
     private final int port;
-    //TODO: timeForStarting
+    private final int timeForConnection = 30 * 1000;
 
     private MatchStateBase state;
     private DatagramSocket socket;
     private Thread matchThread;
 
+    private long endTime;
+
     private boolean isCompleted;
-    private boolean isFailed;
     private boolean isRun;
 
     public Collection<EndPoints> getClients(){
@@ -48,10 +49,6 @@ public class Match {
 
     public boolean getIsCompleted(){
         return isCompleted;
-    }
-
-    public boolean getIsFailed(){
-        return isFailed;
     }
 
     public boolean getIsRun(){
@@ -83,8 +80,9 @@ public class Match {
 
     public void start() throws SocketException {
         socket = new DatagramSocket(port);
-        isRun = true;
         state = new WaitClientState(this);
+        isRun = true;
+        endTime = System.currentTimeMillis() + timeForConnection;
         matchThread = new Thread(this::matchLoop);
     }
 
@@ -111,9 +109,11 @@ public class Match {
     }
 
     private void matchLoop(){
-        while (isRun){
+        while (System.currentTimeMillis() < endTime){
             matchFrame();
         }
+
+        isCompleted = true;
     }
 
     private void matchFrame(){
