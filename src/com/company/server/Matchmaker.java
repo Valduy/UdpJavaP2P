@@ -4,6 +4,7 @@ import com.company.network.EndPoint;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.UserStatus;
+import events.EventArgs;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -16,14 +17,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+/**
+ * Класс, реализующий логику создания многопользовательских матчей.
+ */
 public class Matchmaker{
     private final LinkedList<EndPoint> waitingPlayers = new LinkedList<>();
     private final HashMap<EndPoint, Integer> playerToMatch = new HashMap<>();
     private final ArrayList<Match> matches = new ArrayList<>();
-    private DatagramSocket socket;
-    private int port;
+    private final int playersPerMatch;
 
+    private DatagramSocket socket;
     private Thread matchmakerThread;
+    private int port;
     private boolean isRun;
 
     public boolean getIsRun() {
@@ -34,19 +39,36 @@ public class Matchmaker{
         return port;
     }
 
+    /**
+     * <p>Конструктор матчмейкера.</p>
+     * @param playersPerMatch Количество игроков, учавствующих в одном матче.
+     */
+    public Matchmaker(int playersPerMatch){
+        this.playersPerMatch = playersPerMatch;
+    }
+
+    /**
+     * <p>Метод запускает работу матчмейкера.</p>
+     * @param port Порт, на котором матчмейкер будет принимать сообщения.
+     * @throws SocketException Исключение, возникающее при неудачной попытке открыть сокет.
+     */
     public void start(int port) throws SocketException {
         this.port = port;
         socket = new DatagramSocket(port);
         isRun = true;
-        System.out.print("Matchmaker started!");
+        System.out.print("Матчмейкер запущен.");
         matchmakerThread = new Thread(this::matchmakerLoop);
     }
 
+    /**
+     * <p>Метод останавливает работу матчмейкера.</p>
+     * @throws InterruptedException Исключение, возникающее, если не удалось дождаться завершения потока матчмейкера.
+     */
     public void stop() throws InterruptedException {
         try {
             isRun = false;
             matchmakerThread.join();
-            System.out.print("Matchmaker stoped!");
+            System.out.print("Матчмейкер остановлен.");
         } finally {
             socket.close();
         }
@@ -90,7 +112,6 @@ public class Matchmaker{
         }
 
         tryCreateMatch();
-        checkMatches();
     }
 
     private void onHello(InetAddress address, int port) throws IOException {
@@ -154,16 +175,34 @@ public class Matchmaker{
     }
 
     private void tryCreateMatch(){
-        //TODO: создать матч (который еще написать бы)
-    }
+        if (waitingPlayers.size() >= playersPerMatch){
+            System.out.print("Match creating...");
+            var players = new ArrayList<EndPoint>();
 
-    private void checkMatches(){
-        for (var match : matches){
+            for (int i = 0; i < playersPerMatch; i++){
+                players.add(waitingPlayers.remove(0));
+            }
 
+            var match = new Match(playersPerMatch);
+            match.getEnded().subscribe(this::onMatchEnded);
+
+            for (var player : players){
+                playerToMatch.put(player, match.getPort());
+            }
+
+            try {
+                match.start();
+            } catch (SocketException e) {
+                e.printStackTrace();
+            }
+
+            System.out.print("Match created!");
         }
     }
 
-    private void getEndedMatches(){
-
+    private void onMatchEnded(Object sender, EventArgs e){
+        var match = (Match)sender;
+        playerToMatch.values().removeIf(v -> v == match.getPort());
+        matches.remove(match);
     }
 }

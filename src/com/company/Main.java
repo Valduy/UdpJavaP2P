@@ -14,7 +14,7 @@ public class Main {
             var streamReader = new InputStreamReader(System.in);
             var bufferedReader = new BufferedReader(streamReader);
 
-            var matchmaker = new Matchmaker();
+            var matchmaker = new Matchmaker(2);
             matchmaker.start(4756);
 
             while (true){
