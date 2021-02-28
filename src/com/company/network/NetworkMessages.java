@@ -1,15 +1,20 @@
 package com.company.network;
 
 public enum NetworkMessages {
-    Hello("HLLO"),
-    Bye("GBYE"),
-    Initial("INTL"),
-    Info("INFO");
+    HLLO("HLLO"),
+    GBYE("GBYE"),
+    INIT("INIT"),
+    INFO("INFO");
 
+    private final String label;
     public static final int size = 4;
-    public final String label;
 
     NetworkMessages(String label){
         this.label = label;
+    }
+
+    @Override
+    public String toString(){
+        return label;
     }
 }

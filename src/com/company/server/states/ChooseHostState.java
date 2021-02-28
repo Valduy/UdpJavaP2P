@@ -15,7 +15,7 @@ public class ChooseHostState extends MatchStateBase {
 
     @Override
     public void processMessage(InetAddress address, int port, byte[] received) {
-        if (MessageHelper.getMessageType(received) == NetworkMessages.Hello){
+        if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
             var publicEndPoint = new EndPoint(address, port);
             var client = getClient(publicEndPoint);
 
@@ -23,7 +23,7 @@ public class ChooseHostState extends MatchStateBase {
                 var context = getContext();
                 context.setHost(client);
                 context.setState(new ConnectClientsState(context));
-                context.sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.Hello));
+                context.sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.HLLO));
             }
         }
     }

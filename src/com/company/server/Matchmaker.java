@@ -68,16 +68,16 @@ public class Matchmaker{
             var userPort = packet.getPort();
 
             switch (messageType){
-                case Hello:
+                case HLLO:
                     onHello(userAddress, userPort);
                     break;
-                case Bye:
+                case GBYE:
                     onBye(userAddress, userPort);
                     break;
-                case Info:
+                case INFO:
                     onInfo(userAddress, userPort);
                     break;
-                case Initial:
+                case INIT:
                     onInitial(userAddress, userPort);
                     break;
             }
@@ -97,7 +97,7 @@ public class Matchmaker{
             waitingPlayers.add(new EndPoint(address, port));
         }
 
-        var message = MessageHelper.getMessage(NetworkMessages.Hello);
+        var message = MessageHelper.getMessage(NetworkMessages.HLLO);
         var packet = new DatagramPacket(message, 0, message.length, address, port);
         socket.send(packet);
     }
@@ -111,17 +111,18 @@ public class Matchmaker{
     }
 
     private void onInfo(InetAddress address, int port) throws IOException {
-        UserStatus status = UserStatus.Absent;
+        UserStatus status = UserStatus.ABSN;
 
         if (getEndPoint(address, port) != null){
-            status = UserStatus.Wait;
+            status = UserStatus.WAIT;
         }
 
         if (playerToMatch.containsKey(new EndPoint(address, port))){
-            status = UserStatus.Connected;
+            status = UserStatus.CONN;
         }
 
-        var message = MessageHelper.getMessage(NetworkMessages.Info, status.label.getBytes(StandardCharsets.US_ASCII));
+        var data = status.toString().getBytes(StandardCharsets.US_ASCII);
+        var message = MessageHelper.getMessage(NetworkMessages.INFO, data);
         var packet = new DatagramPacket(message, 0, message.length, address, port);
         socket.send(packet);
     }
@@ -130,7 +131,7 @@ public class Matchmaker{
         var match = playerToMatch.get(new EndPoint(address, port));
 
         if (match != null){
-            var message = MessageHelper.getMessage(NetworkMessages.Initial, ByteBuffer.allocate(4).putInt(match).array());
+            var message = MessageHelper.getMessage(NetworkMessages.INIT, ByteBuffer.allocate(4).putInt(match).array());
             var packet = new DatagramPacket(message, 0, message.length, address, port);
             socket.send(packet);
         }

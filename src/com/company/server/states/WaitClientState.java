@@ -18,7 +18,7 @@ public class WaitClientState extends MatchStateBase{
 
     @Override
     public void processMessage(InetAddress address, int port, byte[] received) {
-        if (MessageHelper.getMessageType(received) == NetworkMessages.Hello){
+        if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
             var context = getContext();
             var publicEndPoint = new EndPoint(address, port);
 
@@ -33,7 +33,7 @@ public class WaitClientState extends MatchStateBase{
                 }
             }
 
-            context.sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.Hello));
+            context.sendMessage(address, port, MessageHelper.getMessage(NetworkMessages.HLLO));
         }
     }
 }

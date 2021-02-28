@@ -18,18 +18,18 @@ public class ConnectClientsState extends MatchStateBase{
         var messageForHost = new P2PConnectionMessage();
         messageForHost.role = Role.Host;
         messageForHost.clients = new ArrayList<>(getContext().getClients());
-        hostMessage = MessageHelper.getMessage(NetworkMessages.Initial, gson.toJson(messageForHost));
+        hostMessage = MessageHelper.getMessage(NetworkMessages.INIT, gson.toJson(messageForHost));
 
         var messageForClient = new P2PConnectionMessage();
         messageForClient.role = Role.Client;
         messageForClient.clients = new ArrayList<>();
         messageForClient.clients.add(getContext().getHost());
-        clientMessage = MessageHelper.getMessage(NetworkMessages.Initial, gson.toJson(messageForClient));
+        clientMessage = MessageHelper.getMessage(NetworkMessages.INIT, gson.toJson(messageForClient));
     }
 
     @Override
     public void processMessage(InetAddress address, int port, byte[] received) {
-        if (MessageHelper.getMessageType(received) == NetworkMessages.Hello){
+        if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
             var publicEndPoint = new EndPoint(address, port);
             var context = getContext();
 
