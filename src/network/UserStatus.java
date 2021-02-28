@@ -1,9 +1,9 @@
 package network;
 
 public enum UserStatus{
-    WAIT("WAIT"),
-    CONNECTED("CONN"),
-    ABSENT("ABSN");
+    Wait("WAIT"),
+    Connected("CONN"),
+    Absent("ABSN");
 
     public static final int size = 4;
     public final String label;

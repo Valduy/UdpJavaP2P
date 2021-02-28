@@ -1,10 +1,10 @@
 package network;
 
 public enum NetworkMessages {
-    HELLO("HLLO"),
-    BYE("GBYE"),
-    INITIAL("INTL"),
-    INFO("INFO");
+    Hello("HLLO"),
+    Bye("GBYE"),
+    Initial("INTL"),
+    Info("INFO");
 
     public static final int size = 4;
     public final String label;

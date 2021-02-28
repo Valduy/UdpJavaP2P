@@ -21,4 +21,8 @@ public abstract class MatchStateBase {
     protected boolean isClient(EndPoint endPoint){
         return context.getClients().stream().anyMatch(c -> c.publicEndPoint.equals(endPoint));
     }
+
+    protected boolean isHost(EndPoint endPoint){
+        return context.getHost() != null && context.getHost().publicEndPoint.equals(endPoint);
+    }
 }

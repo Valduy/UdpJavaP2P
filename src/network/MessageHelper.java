@@ -29,4 +29,8 @@ public class MessageHelper {
         System.arraycopy(data, 0, result, typeBytes.length, data.length);
         return result;
     }
+
+    public static byte[] getMessage(NetworkMessages type, String message){
+        return getMessage(type, message.getBytes(StandardCharsets.US_ASCII));
+    }
 }
