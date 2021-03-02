@@ -184,7 +184,7 @@ public class Matchmaker{
             }
 
             var match = new Match(playersPerMatch);
-            match.getEnded().subscribe(this::onMatchEnded);
+            match.addEnded(this::onMatchEnded);
 
             for (var player : players){
                 playerToMatch.put(player, match.getPort());
@@ -204,5 +204,6 @@ public class Matchmaker{
         var match = (Match)sender;
         playerToMatch.values().removeIf(v -> v == match.getPort());
         matches.remove(match);
+        match.removeEnded(this::onMatchEnded);
     }
 }

@@ -3,6 +3,7 @@ package com.company.server;
 import com.company.network.EndPoints;
 import com.company.server.states.MatchStateBase;
 import com.company.server.states.WaitClientState;
+import events.Event;
 import events.EventArgs;
 import events.EventHandler;
 
@@ -41,10 +42,6 @@ public class Match {
         return host;
     }
 
-    public EventHandler<EventArgs> getEnded(){
-        return ended;
-    }
-
     public void setHost(EndPoints endPoints){
         clients.remove(endPoints);
         host = endPoints;
@@ -74,6 +71,14 @@ public class Match {
 
     public int getPlayersCount(){
         return playersCount;
+    }
+
+    public void addEnded(Event<EventArgs> methodReference){
+        ended.subscribe(methodReference);
+    }
+
+    public void removeEnded(Event<EventArgs> methodReference){
+        ended.unSubscribe(methodReference);
     }
 
     public Match(int playersCount, int port){
