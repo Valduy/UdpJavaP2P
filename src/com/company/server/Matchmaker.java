@@ -22,8 +22,7 @@ import java.util.LinkedList;
  */
 public class Matchmaker{
     private final LinkedList<EndPoint> waitingPlayers = new LinkedList<>();
-    private final HashMap<EndPoint, Integer> playerToMatch = new HashMap<>();
-    private final ArrayList<Match> matches = new ArrayList<>();
+    private final HashMap<EndPoint, Match> playerToMatch = new HashMap<>();
     private final int playersPerMatch;
 
     private DatagramSocket socket;
@@ -48,6 +47,16 @@ public class Matchmaker{
     }
 
     /**
+     * <p>Метод запускает работу матчмейкера на случайном порту.</p>
+     * @throws SocketException Исключение, возникающее при неудачной попытке открыть сокет.
+     */
+    public void start() throws SocketException {
+        socket = new DatagramSocket();
+        port = socket.getLocalPort();
+        startLoop();
+    }
+
+    /**
      * <p>Метод запускает работу матчмейкера.</p>
      * @param port Порт, на котором матчмейкер будет принимать сообщения.
      * @throws SocketException Исключение, возникающее при неудачной попытке открыть сокет.
@@ -55,9 +64,14 @@ public class Matchmaker{
     public void start(int port) throws SocketException {
         this.port = port;
         socket = new DatagramSocket(port);
+        startLoop();
+    }
+
+    private void startLoop(){
         isRun = true;
-        System.out.print("Матчмейкер запущен.");
         matchmakerThread = new Thread(this::matchmakerLoop);
+        matchmakerThread.start();
+        System.out.print("Матчмейкер запущен.");
     }
 
     /**
@@ -158,7 +172,8 @@ public class Matchmaker{
         var match = playerToMatch.get(new EndPoint(address, port));
 
         if (match != null){
-            var message = MessageHelper.getMessage(NetworkMessages.INIT, ByteBuffer.allocate(4).putInt(match).array());
+            var data = ByteBuffer.allocate(4).putInt(match.getPort()).array();
+            var message = MessageHelper.getMessage(NetworkMessages.INIT, data);
             var packet = new DatagramPacket(message, 0, message.length, address, port);
             socket.send(packet);
         }
@@ -186,12 +201,12 @@ public class Matchmaker{
             var match = new Match(playersPerMatch);
             match.addEnded(this::onMatchEnded);
 
-            for (var player : players){
-                playerToMatch.put(player, match.getPort());
-            }
-
             try {
                 match.start();
+
+                for (var player : players){
+                    playerToMatch.put(player, match);
+                }
             } catch (SocketException e) {
                 e.printStackTrace();
             }
@@ -202,8 +217,7 @@ public class Matchmaker{
 
     private void onMatchEnded(Object sender, EventArgs e){
         var match = (Match)sender;
-        playerToMatch.values().removeIf(v -> v == match.getPort());
-        matches.remove(match);
+        playerToMatch.values().removeIf(m -> m == match);
         match.removeEnded(this::onMatchEnded);
     }
 }

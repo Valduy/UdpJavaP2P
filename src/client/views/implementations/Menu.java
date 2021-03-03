@@ -65,4 +65,9 @@ public class Menu extends JComponent implements MenuView {
         stopButton.addActionListener(e -> stopClicked.invoke(stopButton, new EventArgs()));
         menuPanel.add(stopButton);
     }
+
+    @Override
+    public JComponent toComponent() {
+        return this;
+    }
 }

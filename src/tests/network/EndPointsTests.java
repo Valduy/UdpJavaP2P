@@ -1,6 +1,5 @@
 package tests.network;
 
-import com.company.network.EndPoint;
 import com.company.network.EndPoints;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

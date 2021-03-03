@@ -2,7 +2,7 @@ package client.views.interfaces;
 
 import events.*;
 
-public interface MenuView {
+public interface MenuView extends ChildView {
     void setIsInSearch(boolean isInSearch);
 
     void addSearchClicked(Event<EventArgs> methodReference);
