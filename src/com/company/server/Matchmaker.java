@@ -67,9 +67,7 @@ public class Matchmaker{
      * @throws SocketException Исключение, возникающее при неудачной попытке открыть сокет.
      */
     public void start() throws SocketException {
-        socket = new DatagramSocket();
-        port = socket.getLocalPort();
-        startLoop();
+        start(0);
     }
 
     /**
@@ -78,15 +76,8 @@ public class Matchmaker{
      * @throws SocketException Исключение, возникающее при неудачной попытке открыть сокет.
      */
     public void start(int port) throws SocketException {
-        this.port = port;
         socket = new DatagramSocket(port);
-        startLoop();
-    }
-
-    /**
-     * <p>Метод запускает цикл матчмейкера.</p>
-     */
-    private void startLoop(){
+        this.port = socket.getLocalPort();
         isRun = true;
         matchmakerThread = new Thread(this::matchmakerLoop);
         matchmakerThread.start();

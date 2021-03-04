@@ -6,7 +6,9 @@ import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.server.Match;
 import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 
+import java.io.StringReader;
 import java.net.InetAddress;
 
 public class WaitClientState extends MatchStateBase{
@@ -24,7 +26,9 @@ public class WaitClientState extends MatchStateBase{
 
             if (!isClient(publicEndPoint)){
                 var message = MessageHelper.toString(received);
-                var localEndPoint = gson.fromJson(message, EndPoint.class);
+                var reader = new JsonReader(new StringReader(message));
+                reader.setLenient(true);
+                EndPoint localEndPoint = gson.fromJson(reader, EndPoint.class);
                 var endPoints = new EndPoints(publicEndPoint, localEndPoint);
                 context.addClient(endPoints);
 

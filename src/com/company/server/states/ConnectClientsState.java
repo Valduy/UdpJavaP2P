@@ -10,10 +10,10 @@ import java.util.ArrayList;
 public class ConnectClientsState extends MatchStateBase{
     private final byte[] hostMessage;
     private final byte[] clientMessage;
-    private final Gson gson = new Gson();
 
     public ConnectClientsState(Match context) {
         super(context);
+        var gson = new Gson();
 
         var messageForHost = new P2PConnectionMessage();
         messageForHost.role = Role.Host;

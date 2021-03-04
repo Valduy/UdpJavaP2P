@@ -22,14 +22,12 @@ public class Match {
     private EndPoints host;
 
     private final int playersCount;
-    private final int port;
+    private int port;
     private final int timeForConnection = 30 * 1000;
 
     private MatchStateBase state;
     private DatagramSocket socket;
     private Thread matchThread;
-
-    private long endTime;
 
     private boolean isCompleted;
     private boolean isRun;
@@ -81,30 +79,28 @@ public class Match {
         ended.unSubscribe(methodReference);
     }
 
-    public Match(int playersCount, int port){
-        this.port = port;
+    public Match(int playersCount){
         this.playersCount = playersCount;
     }
 
-    public Match(int playersCount){
-        this(playersCount, 0);
+    public void start() throws SocketException {
+        start(0);
     }
 
-    public void start() throws SocketException {
+    public void start(int port) throws SocketException {
         socket = new DatagramSocket(port);
+        this.port = socket.getLocalPort();
         state = new WaitClientState(this);
         isRun = true;
-        endTime = System.currentTimeMillis() + timeForConnection;
+        isCompleted = false;
         matchThread = new Thread(this::matchLoop);
+        matchThread.start();
     }
 
     public void stop() throws InterruptedException {
-        try {
-            isRun = false;
-            matchThread.join();
-        } finally {
-            socket.close();
-        }
+        isRun = false;
+        socket.close();
+        matchThread.join();
     }
 
     public void sendMessage(InetAddress address, int port, byte[] message) {
@@ -121,11 +117,15 @@ public class Match {
     }
 
     private void matchLoop(){
-        while (System.currentTimeMillis() < endTime){
+        var endTime = System.currentTimeMillis() + timeForConnection;
+
+        while (System.currentTimeMillis() < endTime && isRun){
             matchFrame();
         }
 
+        isRun = false;
         isCompleted = true;
+        socket.close();
         ended.invoke(this, new EventArgs());
     }
 
@@ -137,7 +137,9 @@ public class Match {
             socket.receive(packet);
             state.processMessage(packet.getAddress(), packet.getPort(), packet.getData());
         } catch (IOException e) {
-            e.printStackTrace();
+            if (!socket.isClosed()) {
+                e.printStackTrace();
+            }
         }
     }
 }
