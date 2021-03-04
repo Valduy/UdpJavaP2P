@@ -19,6 +19,7 @@ import java.util.*;
  * Класс, реализующий логику создания многопользовательских матчей.
  */
 public class Matchmaker{
+    // TODO: вести учет времени, в течение которого клиент не отправлял сообщений
     private final LinkedList<EndPoint> queue = new LinkedList<>();
     private final ArrayList<Match> matches = new ArrayList<>();
     private final HashMap<EndPoint, Match> playerToMatch = new HashMap<>();
@@ -165,13 +166,17 @@ public class Matchmaker{
         socket.send(packet);
     }
 
-    private void onBye(InetAddress address, int port){
+    private void onBye(InetAddress address, int port) throws IOException {
         System.out.printf("Пока от: %s:%s\n", address.toString(), port);
         var endPoint = getEndPoint(address, port);
 
         if (endPoint != null){
             queue.remove(endPoint);
         }
+
+        var message = MessageHelper.getMessage(NetworkMessages.GBYE);
+        var packet = new DatagramPacket(message, 0, message.length, address, port);
+        socket.send(packet);
     }
 
     private void onInfo(InetAddress address, int port) throws IOException {
