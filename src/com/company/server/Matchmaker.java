@@ -13,15 +13,14 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * Класс, реализующий логику создания многопользовательских матчей.
  */
 public class Matchmaker{
-    private final LinkedList<EndPoint> waitingPlayers = new LinkedList<>();
+    private final LinkedList<EndPoint> queue = new LinkedList<>();
+    private final ArrayList<Match> matches = new ArrayList<>();
     private final HashMap<EndPoint, Match> playerToMatch = new HashMap<>();
     private final int playersPerMatch;
 
@@ -30,12 +29,28 @@ public class Matchmaker{
     private int port;
     private boolean isRun;
 
+    /**
+     * <p>Возвращает статус, работает матчмейкер или нет.</p>
+     * @return true, если матчмейкер работает.
+     */
     public boolean getIsRun() {
         return isRun;
     }
 
+    /**
+     * <p>Возвращает UDP порт, на котором работает матчмейкер.</p>
+     * @return порт, на котором работает матчмейкер.
+     */
     public int getPort() {
         return port;
+    }
+
+    /**
+     * Возвращает очередь клиентов, ожидающих матч.
+     * @return список клиентов в очереди.
+     */
+    public Collection<EndPoint> getQueue(){
+        return Collections.unmodifiableCollection(queue);
     }
 
     /**
@@ -67,11 +82,14 @@ public class Matchmaker{
         startLoop();
     }
 
+    /**
+     * <p>Метод запускает цикл матчмейкера.</p>
+     */
     private void startLoop(){
         isRun = true;
         matchmakerThread = new Thread(this::matchmakerLoop);
         matchmakerThread.start();
-        System.out.print("Матчмейкер запущен.");
+        System.out.println("Матчмейкер запущен.\n");
     }
 
     /**
@@ -79,15 +97,20 @@ public class Matchmaker{
      * @throws InterruptedException Исключение, возникающее, если не удалось дождаться завершения потока матчмейкера.
      */
     public void stop() throws InterruptedException {
-        try {
-            isRun = false;
-            matchmakerThread.join();
-            System.out.print("Матчмейкер остановлен.");
-        } finally {
-            socket.close();
+        isRun = false;
+        socket.close();
+        matchmakerThread.join();
+
+        for (var march : matches){
+            march.stop();
         }
+
+        System.out.println("Матчмейкер остановлен.");
     }
 
+    /**
+     * Метод реализует цикл матчмейкера.
+     */
     private void matchmakerLoop(){
         while (isRun){
             matchmakerFrame();
@@ -99,9 +122,9 @@ public class Matchmaker{
         var packet = new DatagramPacket(receive, receive.length);
 
         try{
-            System.out.print("Waiting for request...");
+            System.out.println("Ожидание запросов...");
             socket.receive(packet);
-            System.out.print("Message received!");
+            System.out.println("Сообщение получено!");
             var messageType = MessageHelper.getMessageType(packet.getData());
             var userAddress = packet.getAddress();
             var userPort = packet.getPort();
@@ -122,17 +145,19 @@ public class Matchmaker{
             }
         }
         catch (IOException e){
-            e.printStackTrace();
+            if (!socket.isClosed()) {
+                e.printStackTrace();
+            }
         }
 
         tryCreateMatch();
     }
 
     private void onHello(InetAddress address, int port) throws IOException {
-        System.out.printf("Hello from: %s:%s", address.toString(), port);
+        System.out.printf("Привет от: %s:%s\n", address.toString(), port);
 
-        if (getEndPoint(address, port) != null){
-            waitingPlayers.add(new EndPoint(address, port));
+        if (getEndPoint(address, port) == null){
+            queue.add(new EndPoint(address, port));
         }
 
         var message = MessageHelper.getMessage(NetworkMessages.HLLO);
@@ -141,16 +166,16 @@ public class Matchmaker{
     }
 
     private void onBye(InetAddress address, int port){
-        System.out.printf("Bye from: %s:%s", address.toString(), port);
+        System.out.printf("Пока от: %s:%s\n", address.toString(), port);
         var endPoint = getEndPoint(address, port);
 
         if (endPoint != null){
-            waitingPlayers.remove(endPoint);
+            queue.remove(endPoint);
         }
     }
 
     private void onInfo(InetAddress address, int port) throws IOException {
-        System.out.printf("Info request from: %s:%s", address.toString(), port);
+        System.out.printf("Запрос на статус от: %s:%s\n", address.toString(), port);
         UserStatus status = UserStatus.ABSN;
 
         if (getEndPoint(address, port) != null){
@@ -168,7 +193,7 @@ public class Matchmaker{
     }
 
     private void onInitial(InetAddress address, int port) throws IOException {
-        System.out.printf("Initial request from: %s:%s", address.toString(), port);
+        System.out.printf("Запрос на инициализацию от: %s:%s\n", address.toString(), port);
         var match = playerToMatch.get(new EndPoint(address, port));
 
         if (match != null){
@@ -182,7 +207,7 @@ public class Matchmaker{
     private EndPoint getEndPoint(InetAddress address, int port){
         var endPoint = new EndPoint(address, port);
 
-        return waitingPlayers
+        return queue
                 .stream()
                 .filter(o -> o.equals(endPoint))
                 .findFirst()
@@ -190,16 +215,17 @@ public class Matchmaker{
     }
 
     private void tryCreateMatch(){
-        if (waitingPlayers.size() >= playersPerMatch){
-            System.out.print("Match creating...");
+        if (queue.size() >= playersPerMatch){
+            System.out.println("Создание матча...");
             var players = new ArrayList<EndPoint>();
 
             for (int i = 0; i < playersPerMatch; i++){
-                players.add(waitingPlayers.remove(0));
+                players.add(queue.remove(0));
             }
 
             var match = new Match(playersPerMatch);
             match.addEnded(this::onMatchEnded);
+            matches.add(match);
 
             try {
                 match.start();
@@ -211,12 +237,13 @@ public class Matchmaker{
                 e.printStackTrace();
             }
 
-            System.out.print("Match created!");
+            System.out.println("Матч создан!");
         }
     }
 
     private void onMatchEnded(Object sender, EventArgs e){
         var match = (Match)sender;
+        matches.remove(match);
         playerToMatch.values().removeIf(m -> m == match);
         match.removeEnded(this::onMatchEnded);
     }
