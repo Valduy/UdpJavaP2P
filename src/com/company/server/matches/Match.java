@@ -1,8 +1,8 @@
-package com.company.server;
+package com.company.server.matches;
 
 import com.company.network.EndPoints;
-import com.company.server.states.MatchStateBase;
-import com.company.server.states.WaitClientState;
+import com.company.server.matches.states.MatchStateBase;
+import com.company.server.matches.states.WaitClientState;
 import events.Event;
 import events.EventArgs;
 import events.EventHandler;
@@ -15,6 +15,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Match {
     private final ArrayList<EndPoints> clients = new ArrayList<>();
@@ -23,13 +26,12 @@ public class Match {
 
     private final int playersCount;
     private int port;
-    private final int timeForConnection = 30 * 1000;
 
     private MatchStateBase state;
     private DatagramSocket socket;
-    private Thread matchThread;
+    private Future<?> matchFuture;
 
-    private boolean isCompleted;
+    private long endTime;
     private boolean isRun;
 
     public Collection<EndPoints> getClients(){
@@ -47,10 +49,6 @@ public class Match {
 
     public void setState(MatchStateBase state){
         this.state = state;
-    }
-
-    public boolean getIsCompleted(){
-        return isCompleted;
     }
 
     public boolean getIsRun(){
@@ -83,24 +81,24 @@ public class Match {
         this.playersCount = playersCount;
     }
 
-    public void start() throws SocketException {
-        start(0);
+    public void start(long time) throws SocketException {
+        start(0, time);
     }
 
-    public void start(int port) throws SocketException {
+    public void start(int port, long time) throws SocketException {
         socket = new DatagramSocket(port);
         this.port = socket.getLocalPort();
         state = new WaitClientState(this);
         isRun = true;
-        isCompleted = false;
-        matchThread = new Thread(this::matchLoop);
-        matchThread.start();
+        var executor = Executors.newSingleThreadExecutor();
+        endTime = System.currentTimeMillis() + time;
+        matchFuture = executor.submit(this::matchLoop);
     }
 
-    public void stop() throws InterruptedException {
+    public void stop() throws InterruptedException, ExecutionException {
         isRun = false;
         socket.close();
-        matchThread.join();
+        matchFuture.get();
     }
 
     public void sendMessage(InetAddress address, int port, byte[] message) {
@@ -117,14 +115,11 @@ public class Match {
     }
 
     private void matchLoop(){
-        var endTime = System.currentTimeMillis() + timeForConnection;
-
         while (System.currentTimeMillis() < endTime && isRun){
             matchFrame();
         }
 
         isRun = false;
-        isCompleted = true;
         socket.close();
         ended.invoke(this, new EventArgs());
     }

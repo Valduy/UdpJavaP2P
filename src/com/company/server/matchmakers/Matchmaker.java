@@ -1,9 +1,10 @@
-package com.company.server;
+package com.company.server.matchmakers;
 
 import com.company.network.EndPoint;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.UserStatus;
+import com.company.server.matches.Match;
 import events.EventArgs;
 
 import java.io.IOException;
@@ -14,6 +15,10 @@ import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 
 /**
  * Класс, реализующий логику создания многопользовательских матчей.
@@ -26,7 +31,7 @@ public class Matchmaker{
     private final int playersPerMatch;
 
     private DatagramSocket socket;
-    private Thread matchmakerThread;
+    private Future<?> matchmakerFuture;
     private int port;
     private boolean isRun;
 
@@ -79,8 +84,8 @@ public class Matchmaker{
         socket = new DatagramSocket(port);
         this.port = socket.getLocalPort();
         isRun = true;
-        matchmakerThread = new Thread(this::matchmakerLoop);
-        matchmakerThread.start();
+        var executor = Executors.newSingleThreadExecutor();
+        matchmakerFuture = executor.submit(this::matchmakerLoop);
         System.out.println("Матчмейкер запущен.\n");
     }
 
@@ -88,13 +93,17 @@ public class Matchmaker{
      * <p>Метод останавливает работу матчмейкера.</p>
      * @throws InterruptedException Исключение, возникающее, если не удалось дождаться завершения потока матчмейкера.
      */
-    public void stop() throws InterruptedException {
+    public void stop() throws ExecutionException, InterruptedException {
         isRun = false;
         socket.close();
-        matchmakerThread.join();
+        matchmakerFuture.get();
 
-        for (var march : matches){
-            march.stop();
+        var matchesToStop = matches.stream()
+                .filter(Match::getIsRun)
+                .collect(Collectors.toList());
+
+        for (var match : matchesToStop){
+            match.stop();
         }
 
         System.out.println("Матчмейкер остановлен.");
@@ -224,7 +233,7 @@ public class Matchmaker{
             matches.add(match);
 
             try {
-                match.start();
+                match.start(30 * 1000);
 
                 for (var player : players){
                     playerToMatch.put(player, match);

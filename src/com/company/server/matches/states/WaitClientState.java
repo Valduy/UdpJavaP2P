@@ -1,10 +1,10 @@
-package com.company.server.states;
+package com.company.server.matches.states;
 
 import com.company.network.EndPoint;
 import com.company.network.EndPoints;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
-import com.company.server.Match;
+import com.company.server.matches.Match;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 

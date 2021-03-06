@@ -1,6 +1,6 @@
 package tests.connectors.matchmaker;
 
-import com.company.server.Matchmaker;
+import com.company.server.matchmakers.Matchmaker;
 import connectors.matchmaker.MatchmakerConnector;
 import connectors.matchmaker.MatchmakerConnectorException;
 import org.junit.jupiter.api.*;

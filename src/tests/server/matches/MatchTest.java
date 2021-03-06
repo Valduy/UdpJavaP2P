@@ -1,7 +1,7 @@
-package tests.server;
+package tests.server.matches;
 
 import com.company.network.*;
-import com.company.server.Match;
+import com.company.server.matches.Match;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import org.junit.jupiter.api.*;
@@ -9,6 +9,7 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,7 +29,7 @@ public class MatchTest {
         timePerAction = 10 * 1000;
         gson = new Gson();
         match = new Match(2);
-        match.start();
+        match.start(30 * 1000);
         client1 = new DatagramSocket();
         client2 = new DatagramSocket();
         message1 = getHelloMessage(client1);
@@ -36,7 +37,7 @@ public class MatchTest {
     }
 
     @AfterAll
-    private static void finish() throws InterruptedException {
+    private static void finish() throws InterruptedException, ExecutionException {
         match.stop();
         client1.close();
         client2.close();

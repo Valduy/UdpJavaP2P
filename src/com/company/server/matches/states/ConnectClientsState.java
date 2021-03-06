@@ -1,6 +1,6 @@
-package com.company.server.states;
+package com.company.server.matches.states;
 
-import com.company.server.Match;
+import com.company.server.matches.Match;
 import com.google.gson.Gson;
 import com.company.network.*;
 

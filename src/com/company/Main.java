@@ -1,18 +1,12 @@
 package com.company;
 
-import com.company.network.MessageHelper;
-import com.company.network.NetworkMessages;
-import com.company.network.UserStatus;
-import com.company.server.Matchmaker;
+import com.company.server.matchmakers.Matchmaker;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 public class Main {
 
@@ -32,7 +26,7 @@ public class Main {
             }
 
             matchmaker.stop();
-        } catch (IOException | InterruptedException e){
+        } catch (IOException | InterruptedException | ExecutionException e){
             e.printStackTrace();
         }
     }
