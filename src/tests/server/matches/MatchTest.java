@@ -10,7 +10,6 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

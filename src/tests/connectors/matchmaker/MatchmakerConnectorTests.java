@@ -1,6 +1,7 @@
 package tests.connectors.matchmaker;
 
 import com.company.server.matchmakers.Matchmaker;
+import com.company.server.matchmakers.MatchmakerException;
 import connectors.matchmaker.MatchmakerConnector;
 import connectors.matchmaker.MatchmakerConnectorException;
 import org.junit.jupiter.api.*;
@@ -22,7 +23,7 @@ public class MatchmakerConnectorTests {
     private static volatile Boolean[] invokations;
 
     @BeforeAll
-    public static void setUp() throws SocketException {
+    public static void setUp() throws SocketException, MatchmakerException {
         matchmaker = new Matchmaker(2);
         matchmaker.start();
         client1 = new DatagramSocket();

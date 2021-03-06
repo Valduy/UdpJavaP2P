@@ -1,6 +1,7 @@
 package com.company.server.matches.states;
 
 import com.company.server.matches.Match;
+import com.company.server.matches.MatchException;
 import com.google.gson.Gson;
 import com.company.network.*;
 
@@ -28,7 +29,7 @@ public class ConnectClientsState extends MatchStateBase{
     }
 
     @Override
-    public void processMessage(InetAddress address, int port, byte[] received) {
+    public void processMessage(InetAddress address, int port, byte[] received) throws MatchException {
         if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
             var publicEndPoint = new EndPoint(address, port);
             var context = getContext();

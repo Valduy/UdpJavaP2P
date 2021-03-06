@@ -3,14 +3,13 @@ package tests.server.matchmakers;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.UserStatus;
-import com.company.server.matches.MatchException;
 import com.company.server.matchmakers.Matchmaker;
+import com.company.server.matchmakers.MatchmakerException;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,7 +21,7 @@ public class MatchmakerTest {
     private static DatagramSocket client;
 
     @BeforeAll
-    public static void setUp() throws SocketException {
+    public static void setUp() throws SocketException, MatchmakerException {
         timePerAction = 10 * 1000;
         matchmaker = new Matchmaker(2);
         matchmaker.start();
@@ -32,7 +31,7 @@ public class MatchmakerTest {
     }
 
     @AfterAll
-    public static void finish() throws InterruptedException, ExecutionException, MatchException {
+    public static void finish() throws MatchmakerException {
         matchmaker.stop();
         client.close();
     }

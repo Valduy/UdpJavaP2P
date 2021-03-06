@@ -5,6 +5,7 @@ import com.company.network.EndPoints;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.server.matches.Match;
+import com.company.server.matches.MatchException;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 
@@ -19,7 +20,7 @@ public class WaitClientState extends MatchStateBase{
     }
 
     @Override
-    public void processMessage(InetAddress address, int port, byte[] received) {
+    public void processMessage(InetAddress address, int port, byte[] received) throws MatchException {
         if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
             var context = getContext();
             var publicEndPoint = new EndPoint(address, port);

@@ -2,6 +2,7 @@ package com.company;
 
 import com.company.server.matches.MatchException;
 import com.company.server.matchmakers.Matchmaker;
+import com.company.server.matchmakers.MatchmakerException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class Main {
             }
 
             matchmaker.stop();
-        } catch (IOException | InterruptedException | ExecutionException | MatchException e){
+        } catch (IOException | MatchmakerException e){
             e.printStackTrace();
         }
     }

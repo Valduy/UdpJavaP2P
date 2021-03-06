@@ -105,20 +105,21 @@ public class Match {
 
     public void stop() throws MatchException {
         isRun = false;
+        socket.close();
 
         try {
             matchFuture.get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new MatchException(e);
+            throw new MatchException("Не удалось корректно завершить задачу.", e);
         }
     }
 
-    public void sendMessage(InetAddress address, int port, byte[] message) {
+    public void sendMessage(InetAddress address, int port, byte[] message) throws MatchException {
         try {
             var packet = new DatagramPacket(message, message.length, address, port);
             socket.send(packet);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MatchException("Не удалось отправить пакет.", e);
         }
     }
 
@@ -144,7 +145,9 @@ public class Match {
             socket.receive(packet);
             state.processMessage(packet.getAddress(), packet.getPort(), packet.getData());
         } catch (IOException e) {
-            throw new MatchException(e);
+            if (!socket.isClosed()){
+                throw new MatchException(e);
+            }
         }
     }
 }

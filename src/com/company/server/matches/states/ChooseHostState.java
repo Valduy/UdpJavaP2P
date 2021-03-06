@@ -5,6 +5,7 @@ import com.company.network.EndPoints;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.server.matches.Match;
+import com.company.server.matches.MatchException;
 
 import java.net.InetAddress;
 
@@ -14,7 +15,7 @@ public class ChooseHostState extends MatchStateBase {
     }
 
     @Override
-    public void processMessage(InetAddress address, int port, byte[] received) {
+    public void processMessage(InetAddress address, int port, byte[] received) throws MatchException {
         if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
             var publicEndPoint = new EndPoint(address, port);
             var client = getClient(publicEndPoint);

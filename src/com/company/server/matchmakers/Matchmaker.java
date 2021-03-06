@@ -32,7 +32,7 @@ public class Matchmaker{
     private final int playersPerMatch;
 
     private DatagramSocket socket;
-    private Future<?> matchmakerFuture;
+    private Future<Void> matchmakerFuture;
     private int port;
     private boolean isRun;
 
@@ -70,41 +70,59 @@ public class Matchmaker{
 
     /**
      * <p>Метод запускает работу матчмейкера на случайном порту.</p>
-     * @throws SocketException Исключение, возникающее при неудачной попытке открыть сокет.
+     * @throws MatchmakerException Исключение, возникающее при неудачной попытке открыть сокет.
      */
-    public void start() throws SocketException {
+    public void start() throws MatchmakerException {
         start(0);
     }
 
     /**
      * <p>Метод запускает работу матчмейкера.</p>
      * @param port Порт, на котором матчмейкер будет принимать сообщения.
-     * @throws SocketException Исключение, возникающее при неудачной попытке открыть сокет.
+     * @throws MatchmakerException Исключение, возникающее при неудачной попытке открыть сокет.
      */
-    public void start(int port) throws SocketException {
-        socket = new DatagramSocket(port);
+    public void start(int port) throws MatchmakerException {
+        try {
+            socket = new DatagramSocket(port);
+        } catch (SocketException e) {
+            throw new MatchmakerException("Не удалось открыть сокет.", e);
+        }
+
         this.port = socket.getLocalPort();
         isRun = true;
         var executor = Executors.newSingleThreadExecutor();
-        matchmakerFuture = executor.submit(this::matchmakerLoop);
+        matchmakerFuture = executor.submit(() -> {
+            matchmakerLoop();
+            return null;
+        });
         System.out.println("Матчмейкер запущен.\n");
     }
 
     /**
      * <p>Метод останавливает работу матчмейкера.</p>
-     * @throws InterruptedException Исключение, возникающее, если не удалось дождаться завершения потока матчмейкера.
+     * @throws MatchmakerException Исключение, возникающее, если не удалось дождаться завершения задачи матчмейкера,
+     * или если не удалось прервать еще работающие матчи.
      */
-    public void stop() throws ExecutionException, InterruptedException, MatchException {
+    public void stop() throws MatchmakerException {
         isRun = false;
         socket.close();
-        matchmakerFuture.get();
+
+        try {
+            matchmakerFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new MatchmakerException("Не удалось корректно завершить задачу", e);
+        }
 
         var matchesToStop = matches.stream()
                 .filter(Match::getIsRun)
                 .collect(Collectors.toList());
 
-        for (var match : matchesToStop){
-            match.stop();
+        try {
+            for (var match : matchesToStop){
+                match.stop();
+            }
+        } catch (MatchException e) {
+            e.printStackTrace();
         }
 
         System.out.println("Матчмейкер остановлен.");
@@ -113,13 +131,13 @@ public class Matchmaker{
     /**
      * Метод реализует цикл матчмейкера.
      */
-    private void matchmakerLoop(){
+    private void matchmakerLoop() throws MatchmakerException {
         while (isRun){
             matchmakerFrame();
         }
     }
 
-    private void matchmakerFrame(){
+    private void matchmakerFrame() throws MatchmakerException {
         var receive = new byte[NetworkMessages.size];
         var packet = new DatagramPacket(receive, receive.length);
 
@@ -148,14 +166,14 @@ public class Matchmaker{
         }
         catch (IOException e){
             if (!socket.isClosed()) {
-                e.printStackTrace();
+                throw new MatchmakerException(e);
             }
         }
 
         tryCreateMatch();
     }
 
-    private void onHello(InetAddress address, int port) throws IOException {
+    private void onHello(InetAddress address, int port) throws MatchmakerException {
         System.out.printf("Привет от: %s:%s\n", address.toString(), port);
 
         if (getEndPoint(address, port) == null){
@@ -164,10 +182,15 @@ public class Matchmaker{
 
         var message = MessageHelper.getMessage(NetworkMessages.HLLO);
         var packet = new DatagramPacket(message, 0, message.length, address, port);
-        socket.send(packet);
+
+        try {
+            socket.send(packet);
+        } catch (IOException e) {
+            throw new MatchmakerException(e);
+        }
     }
 
-    private void onBye(InetAddress address, int port) throws IOException {
+    private void onBye(InetAddress address, int port) throws MatchmakerException {
         System.out.printf("Пока от: %s:%s\n", address.toString(), port);
         var endPoint = getEndPoint(address, port);
 
@@ -177,10 +200,15 @@ public class Matchmaker{
 
         var message = MessageHelper.getMessage(NetworkMessages.GBYE);
         var packet = new DatagramPacket(message, 0, message.length, address, port);
-        socket.send(packet);
+
+        try {
+            socket.send(packet);
+        } catch (IOException e) {
+            throw new MatchmakerException(e);
+        }
     }
 
-    private void onInfo(InetAddress address, int port) throws IOException {
+    private void onInfo(InetAddress address, int port) throws MatchmakerException {
         System.out.printf("Запрос на статус от: %s:%s\n", address.toString(), port);
         UserStatus status = UserStatus.ABSN;
 
@@ -195,10 +223,15 @@ public class Matchmaker{
         var data = status.toString().getBytes(StandardCharsets.US_ASCII);
         var message = MessageHelper.getMessage(NetworkMessages.INFO, data);
         var packet = new DatagramPacket(message, 0, message.length, address, port);
-        socket.send(packet);
+
+        try {
+            socket.send(packet);
+        } catch (IOException e) {
+            throw new MatchmakerException(e);
+        }
     }
 
-    private void onInitial(InetAddress address, int port) throws IOException {
+    private void onInitial(InetAddress address, int port) throws MatchmakerException {
         System.out.printf("Запрос на инициализацию от: %s:%s\n", address.toString(), port);
         var match = playerToMatch.get(new EndPoint(address, port));
 
@@ -206,7 +239,12 @@ public class Matchmaker{
             var data = ByteBuffer.allocate(4).putInt(match.getPort()).array();
             var message = MessageHelper.getMessage(NetworkMessages.INIT, data);
             var packet = new DatagramPacket(message, 0, message.length, address, port);
-            socket.send(packet);
+
+            try {
+                socket.send(packet);
+            } catch (IOException e) {
+                throw new MatchmakerException(e);
+            }
         }
     }
 
