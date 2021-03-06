@@ -81,7 +81,7 @@ public class MatchmakerConnector {
         isRun = true;
 
         var threadExecutor = Executors.newSingleThreadExecutor();
-        threadExecutor.submit((Callable<Void>) () -> {
+        connectionFuture = threadExecutor.submit((Callable<Void>) () -> {
             connect();
             return null;
         });

@@ -47,4 +47,12 @@ public class MatchmakerConnectorTests {
     public void resultTest() {
         assertEquals(connector1.getMatchPort(), connector2.getMatchPort());
     }
+
+    @Test
+    @Order(3)
+    public void stopTest() throws MatchmakerConnectorException, InterruptedException {
+        connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort(), 10 * 1000);
+        Thread.sleep(1000);
+        connector1.stop();
+    }
 }
