@@ -3,7 +3,7 @@ package events;
 import java.util.ArrayList;
 
 public class EventHandler <TEventArgs> {
-    private ArrayList<Event<TEventArgs>> eventDelegateArray = new ArrayList<>();
+    private final ArrayList<Event<TEventArgs>> eventDelegateArray = new ArrayList<>();
 
     public void subscribe(Event<TEventArgs> methodReference){
         eventDelegateArray.add(methodReference);

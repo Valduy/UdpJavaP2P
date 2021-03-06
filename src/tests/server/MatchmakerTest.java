@@ -25,7 +25,8 @@ public class MatchmakerTest {
         matchmaker = new Matchmaker(2);
         matchmaker.start();
         client = new DatagramSocket();
-        client.setSoTimeout(1000);
+        var socketTimeout = 1000;
+        client.setSoTimeout(socketTimeout);
     }
 
     @AfterAll
