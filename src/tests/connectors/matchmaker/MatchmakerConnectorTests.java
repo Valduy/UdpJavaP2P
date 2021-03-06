@@ -31,6 +31,14 @@ public class MatchmakerConnectorTests {
         connector2 = new MatchmakerConnector();
     }
 
+    @AfterAll
+    public static void finish() throws MatchmakerConnectorException {
+        connector1.stop();
+        connector2.stop();
+        client1.close();
+        client2.close();
+    }
+
     @Test
     @Order(1)
     public void startTest() throws MatchmakerConnectorException {

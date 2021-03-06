@@ -6,17 +6,13 @@ import events.Event;
 import events.EventHandler;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.util.concurrent.*;
 
 public class MatchmakerConnector {
     private final EventHandler<ConnectionArgs> found = new EventHandler<>();
 
     private DatagramSocket client;
-    private Callable<Void> connectionTask;
     private Future<Void> connectionFuture;
     private MatchmakerConnectorState state;
 
@@ -24,6 +20,7 @@ public class MatchmakerConnector {
     private int serverPort;
     private int matchPort;
     private long time;
+    private long endTime;
     private boolean isRun;
 
     public boolean getIsRun(){
@@ -79,12 +76,12 @@ public class MatchmakerConnector {
         }
 
         isRun = true;
-
-        var threadExecutor = Executors.newSingleThreadExecutor();
-        connectionFuture = threadExecutor.submit((Callable<Void>) () -> {
+        var executor = Executors.newSingleThreadScheduledExecutor();
+        endTime = System.currentTimeMillis() + time;
+        connectionFuture = executor.schedule(() -> {
             connect();
             return null;
-        });
+        }, 1, TimeUnit.SECONDS);
     }
 
     public void stop() throws MatchmakerConnectorException {
@@ -124,24 +121,22 @@ public class MatchmakerConnector {
     }
 
     private void connect() throws MatchmakerConnectorException {
-        var endTime = System.currentTimeMillis() + time;
+        state.send();
 
-        while (isRun){
-            state.send();
-
-            try {
-                var buffer = new byte[512];
-                var packet = new DatagramPacket(buffer, buffer.length);
-                client.receive(packet);
-                state.processMessage(packet.getData());
-            } catch (IOException e) {
-                continue;
+        try {
+            var buffer = new byte[512];
+            var packet = new DatagramPacket(buffer, buffer.length);
+            client.receive(packet);
+            state.processMessage(packet.getData());
+        } catch (IOException e) {
+            if (!(e.getCause() instanceof SocketTimeoutException)) {
+                throw new MatchmakerConnectorException(e);
             }
+        }
 
-            if (System.currentTimeMillis() > endTime){
-                var e = new TimeoutException();
-                throw new MatchmakerConnectorException("Время на подключение истекло.", e);
-            }
+        if (System.currentTimeMillis() > endTime){
+            var e = new TimeoutException();
+            throw new MatchmakerConnectorException("Время на подключение истекло.", e);
         }
     }
 
