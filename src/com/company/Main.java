@@ -1,5 +1,6 @@
 package com.company;
 
+import com.company.server.matches.MatchException;
 import com.company.server.matchmakers.Matchmaker;
 
 import java.io.BufferedReader;
@@ -26,7 +27,7 @@ public class Main {
             }
 
             matchmaker.stop();
-        } catch (IOException | InterruptedException | ExecutionException e){
+        } catch (IOException | InterruptedException | ExecutionException | MatchException e){
             e.printStackTrace();
         }
     }

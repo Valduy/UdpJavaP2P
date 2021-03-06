@@ -5,6 +5,7 @@ import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.UserStatus;
 import com.company.server.matches.Match;
+import com.company.server.matches.MatchException;
 import events.EventArgs;
 
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class Matchmaker{
      * <p>Метод останавливает работу матчмейкера.</p>
      * @throws InterruptedException Исключение, возникающее, если не удалось дождаться завершения потока матчмейкера.
      */
-    public void stop() throws ExecutionException, InterruptedException {
+    public void stop() throws ExecutionException, InterruptedException, MatchException {
         isRun = false;
         socket.close();
         matchmakerFuture.get();
@@ -238,7 +239,7 @@ public class Matchmaker{
                 for (var player : players){
                     playerToMatch.put(player, match);
                 }
-            } catch (SocketException e) {
+            } catch (MatchException e) {
                 e.printStackTrace();
             }
 

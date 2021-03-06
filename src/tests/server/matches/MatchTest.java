@@ -2,6 +2,7 @@ package tests.server.matches;
 
 import com.company.network.*;
 import com.company.server.matches.Match;
+import com.company.server.matches.MatchException;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import org.junit.jupiter.api.*;
@@ -25,7 +26,7 @@ public class MatchTest {
     private static Gson gson;
 
     @BeforeAll
-    private static void setUp() throws SocketException {
+    private static void setUp() throws SocketException, MatchException {
         timePerAction = 10 * 1000;
         gson = new Gson();
         match = new Match(2);
@@ -37,7 +38,7 @@ public class MatchTest {
     }
 
     @AfterAll
-    private static void finish() throws InterruptedException, ExecutionException {
+    private static void finish() throws MatchException {
         match.stop();
         client1.close();
         client2.close();

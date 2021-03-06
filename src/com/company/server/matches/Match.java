@@ -29,7 +29,7 @@ public class Match {
 
     private MatchStateBase state;
     private DatagramSocket socket;
-    private Future<?> matchFuture;
+    private Future<Void> matchFuture;
 
     private long endTime;
     private boolean isRun;
@@ -81,24 +81,36 @@ public class Match {
         this.playersCount = playersCount;
     }
 
-    public void start(long time) throws SocketException {
+    public void start(long time) throws MatchException {
         start(0, time);
     }
 
-    public void start(int port, long time) throws SocketException {
-        socket = new DatagramSocket(port);
+    public void start(int port, long time) throws MatchException {
+        try {
+            socket = new DatagramSocket(port);
+        } catch (SocketException e) {
+            throw new MatchException("Не удалось создать сокет.", e);
+        }
+
         this.port = socket.getLocalPort();
         state = new WaitClientState(this);
         isRun = true;
         var executor = Executors.newSingleThreadExecutor();
         endTime = System.currentTimeMillis() + time;
-        matchFuture = executor.submit(this::matchLoop);
+        matchFuture = executor.submit(() -> {
+            matchLoop();
+            return null;
+        });
     }
 
-    public void stop() throws InterruptedException, ExecutionException {
+    public void stop() throws MatchException {
         isRun = false;
-        socket.close();
-        matchFuture.get();
+
+        try {
+            matchFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new MatchException(e);
+        }
     }
 
     public void sendMessage(InetAddress address, int port, byte[] message) {
@@ -114,7 +126,7 @@ public class Match {
         clients.add(endPoints);
     }
 
-    private void matchLoop(){
+    private void matchLoop() throws MatchException {
         while (System.currentTimeMillis() < endTime && isRun){
             matchFrame();
         }
@@ -124,7 +136,7 @@ public class Match {
         ended.invoke(this, new EventArgs());
     }
 
-    private void matchFrame(){
+    private void matchFrame() throws MatchException {
         var receive = new byte[128];
         var packet = new DatagramPacket(receive, receive.length);
 
@@ -132,9 +144,7 @@ public class Match {
             socket.receive(packet);
             state.processMessage(packet.getAddress(), packet.getPort(), packet.getData());
         } catch (IOException e) {
-            if (!socket.isClosed()) {
-                e.printStackTrace();
-            }
+            throw new MatchException(e);
         }
     }
 }

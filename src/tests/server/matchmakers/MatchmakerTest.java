@@ -3,6 +3,7 @@ package tests.server.matchmakers;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.UserStatus;
+import com.company.server.matches.MatchException;
 import com.company.server.matchmakers.Matchmaker;
 import org.junit.jupiter.api.*;
 
@@ -31,7 +32,7 @@ public class MatchmakerTest {
     }
 
     @AfterAll
-    public static void finish() throws InterruptedException, ExecutionException {
+    public static void finish() throws InterruptedException, ExecutionException, MatchException {
         matchmaker.stop();
         client.close();
     }
