@@ -1,16 +1,33 @@
 package connectors.matchmaker;
 
 public class MatchmakerConnectorException extends Exception{
-    public final Exception sourceException;
-    public final String message;
+    private String message;
+    private Exception cause;
 
-    public MatchmakerConnectorException(Exception e){
-        sourceException = e;
-        message = e.getMessage();
+    public MatchmakerConnectorException(){
+
     }
 
-    public MatchmakerConnectorException(String message, Exception e){
+    public MatchmakerConnectorException(String message){
         this.message = message;
-        sourceException = e;
+    }
+
+    public MatchmakerConnectorException(Exception cause){
+        this.cause = cause;
+    }
+
+    public MatchmakerConnectorException(String message, Exception cause){
+        this.message = message;
+        this.cause = cause;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
+
+    @Override
+    public Exception getCause() {
+        return cause;
     }
 }
