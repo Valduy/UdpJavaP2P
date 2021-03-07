@@ -19,8 +19,8 @@ public class HolePuncher {
     private ArrayList<EndPoints> potencials;
     private HashSet<EndPoint> requesters;
     private HashSet<EndPoint> confirmed;
-    private byte[] checkedMessage;
-    private byte[] confirmedMessage;
+    private final byte[] checkedMessage;
+    private final byte[] confirmedMessage;
     private boolean isRun;
     private int failureCount;
     private int allowedFailuresCount;
@@ -35,6 +35,10 @@ public class HolePuncher {
 
     public void setAllowedFailuresCount(int allowedFailuresCount){
         this.allowedFailuresCount = allowedFailuresCount;
+    }
+
+    public ArrayList<EndPoint> getClients(){
+        return new ArrayList<>(confirmed);
     }
 
     private final EventHandler<EventArgs> connected = new EventHandler<>();
@@ -58,6 +62,9 @@ public class HolePuncher {
     public void start(DatagramSocket client, P2PConnectionMessage connectionMessage){
         this.client = client;
         this.connectionMessage = connectionMessage;
+        potencials = new ArrayList<>(connectionMessage.clients);
+        requesters = new HashSet<>();
+        confirmed = new HashSet<>();
 
         isRun = true;
         var executor = Executors.newSingleThreadScheduledExecutor();
