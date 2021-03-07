@@ -1,18 +1,19 @@
 package connectors.match;
 
-import com.company.network.EndPoint;
-import com.company.network.LanIpHelper;
-import com.company.network.MessageHelper;
-import com.company.network.NetworkMessages;
+import com.company.network.*;
 import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import connectors.ConnectorBase;
 import connectors.ConnectorException;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-public class MatchConnector extends ConnectorBase {
+public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
     private class HelloState extends ConnectorStateBase<MatchConnector>{
         private final byte[] message;
 
@@ -28,13 +29,13 @@ public class MatchConnector extends ConnectorBase {
 
         @Override
         public void send() throws ConnectorException {
-            sendMessage(message);
+            send(message);
         }
 
         @Override
         public void processMessage(byte[] received) throws ConnectorException {
             if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
-                setState(new WaitState(context));
+                changeState(new WaitState(getContext()));
             }
         }
     }
@@ -49,20 +50,35 @@ public class MatchConnector extends ConnectorBase {
 
         @Override
         public void send() throws ConnectorException {
-            sendMessage(message);
+            send(message);
         }
 
         @Override
         public void processMessage(byte[] received) throws ConnectorException {
             if (MessageHelper.getMessageType(received) == NetworkMessages.INIT){
-                // TODO: прочитать P2P и сменить стейт
+                var gson = new Gson();
+                var data = MessageHelper.toString(received);
+                var reader = new JsonReader(new StringReader(data));
+                P2PConnectionMessage message = gson.fromJson(reader, P2PConnectionMessage.class);
+                setConnectionMessage(message);
+                finish();
             }
         }
     }
 
     private InetAddress lanIp;
+    private P2PConnectionMessage connectionMessage;
 
-    protected InetAddress getLanIp(){
+    @Override
+    public P2PConnectionMessage getResult(){
+        return connectionMessage;
+    }
+
+    private void setConnectionMessage(P2PConnectionMessage connectionMessage){
+        this.connectionMessage = connectionMessage;
+    }
+
+    private InetAddress getLanIp(){
         return lanIp;
     }
 

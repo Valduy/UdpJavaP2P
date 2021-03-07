@@ -1,16 +1,13 @@
 package com.company.network;
 
-public enum NetworkMessages {
-    HLLO("HLLO"),
-    GBYE("GBYE"),
-    INIT("INIT"),
-    INFO("INFO"),
-    CONN("CONN");
+public enum HolePunching {
+    CHCK("CHCK"),
+    CONF("CONF");
 
     private final String label;
     public static final int size = 4;
 
-    NetworkMessages(String label){
+    HolePunching(String label){
         this.label = label;
     }
 

@@ -20,7 +20,7 @@ public class MatchmakerConnectorTests {
     private static Matchmaker matchmaker;
     private static MatchmakerConnector connector1;
     private static MatchmakerConnector connector2;
-    private static volatile Boolean[] invokations;
+    private static volatile Boolean[] invocations;
 
     @BeforeAll
     public static void setUp() throws SocketException, MatchmakerException {
@@ -43,12 +43,12 @@ public class MatchmakerConnectorTests {
     @Test
     @Order(1)
     public void startTest() throws ConnectorException {
-        invokations = new Boolean[] {false, false};
-        connector1.addFound((o, e) -> invokations[0] = true);
-        connector2.addFound((o, e) -> invokations[1] = true);
+        invocations = new Boolean[] {false, false};
+        connector1.addFound((o, e) -> invocations[0] = true);
+        connector2.addFound((o, e) -> invocations[1] = true);
         connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort());
         connector2.start(client2, InetAddress.getLoopbackAddress(), matchmaker.getPort());
-        while (Arrays.stream(invokations).allMatch(i -> i)) Thread.onSpinWait();
+        while (Arrays.stream(invocations).allMatch(i -> i)) Thread.onSpinWait();
     }
 
     @Test

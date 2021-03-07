@@ -9,7 +9,7 @@ import connectors.ConnectorException;
 
 import java.nio.ByteBuffer;
 
-public class MatchmakerConnector extends ConnectorBase {
+public class MatchmakerConnector extends ConnectorBase<Integer> {
     private class HelloState extends ConnectorStateBase<MatchmakerConnector>{
         private final byte[] message;
 
@@ -20,13 +20,13 @@ public class MatchmakerConnector extends ConnectorBase {
 
         @Override
         public void send() throws ConnectorException {
-            sendMessage(message);
+            send(message);
         }
 
         @Override
         public void processMessage(byte[] received) {
             if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
-                changeState(new MatchmakerConnector.WaitState(context));
+                changeState(new MatchmakerConnector.WaitState(getContext()));
             }
         }
     }
@@ -41,7 +41,7 @@ public class MatchmakerConnector extends ConnectorBase {
 
         @Override
         public void send() throws ConnectorException {
-            sendMessage(message);
+            send(message);
         }
 
         @Override
@@ -52,10 +52,10 @@ public class MatchmakerConnector extends ConnectorBase {
 
                 switch (status) {
                     case CONN:
-                        changeState(new InitialState(context));
+                        changeState(new InitialState(getContext()));
                         break;
                     case ABSN:
-                        changeState(new HelloState(context));
+                        changeState(new HelloState(getContext()));
                         break;
                 }
             }
@@ -73,7 +73,7 @@ public class MatchmakerConnector extends ConnectorBase {
 
         @Override
         public void send() throws ConnectorException {
-            sendMessage(message);
+            send(message);
         }
 
         @Override
@@ -81,15 +81,16 @@ public class MatchmakerConnector extends ConnectorBase {
             if (MessageHelper.getMessageType(received) == NetworkMessages.INIT){
                 var data = MessageHelper.toByteArray(received);
                 var port = ByteBuffer.wrap(data).getInt();
-                context.setMatchPort(port);
-                finishConnection();
+                getContext().setMatchPort(port);
+                finish();
             }
         }
     }
 
     private int matchPort;
 
-    public int getMatchPort(){
+    @Override
+    public Integer getResult() {
         return matchPort;
     }
 

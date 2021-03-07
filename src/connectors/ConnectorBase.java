@@ -8,9 +8,13 @@ import java.io.IOException;
 import java.net.*;
 import java.util.concurrent.*;
 
-public abstract class ConnectorBase {
+public abstract class ConnectorBase<TResult> implements Connector<TResult> {
     protected abstract class ConnectorStateBase<Connector extends ConnectorBase>{
-        public final Connector context;
+        private final Connector context;
+
+        public Connector getContext(){
+            return context;
+        }
 
         public ConnectorStateBase(Connector context){
             this.context = context;
@@ -19,16 +23,16 @@ public abstract class ConnectorBase {
         public abstract void send() throws ConnectorException;
         public abstract void processMessage(byte[] received) throws ConnectorException;
 
-        protected void sendMessage(byte[] message) throws ConnectorException {
-            context.sendMessage(message);
+        protected void changeState(ConnectorStateBase<Connector> state){
+            setState(state);
         }
 
-        protected void changeState(ConnectorStateBase<?> state){
-            context.setState(state);
+        protected void send(byte[] message) throws ConnectorException {
+            sendMessage(message);
         }
 
-        protected void finishConnection() throws ConnectorException {
-            context.finishConnection();
+        protected void finish() throws ConnectorException {
+            finishConnection();
         }
     }
 
@@ -58,23 +62,25 @@ public abstract class ConnectorBase {
     }
 
     public int getAllowedFailuresCount(){
-        return failureCount;
+        return allowedFailuresCount;
     }
 
     public void setAllowedFailuresCount(int allowedFailuresCount){
         this.allowedFailuresCount = allowedFailuresCount;
     }
 
-    protected void setState(ConnectorStateBase<?> state){
+    private void setState(ConnectorStateBase<?> state){
         this.state = state;
     }
 
     private final EventHandler<EventArgs> connected = new EventHandler<>();
 
+    @Override
     public void addFound(Event<EventArgs> methodReference){
         connected.subscribe(methodReference);
     }
 
+    @Override
     public void removeFound(Event<EventArgs> methodReference){
         connected.unSubscribe(methodReference);
     }
@@ -83,6 +89,7 @@ public abstract class ConnectorBase {
         allowedFailuresCount = 10;
     }
 
+    @Override
     public void start(DatagramSocket client, InetAddress address, int port)
             throws ConnectorException
     {
@@ -107,6 +114,7 @@ public abstract class ConnectorBase {
         }, 1, TimeUnit.SECONDS);
     }
 
+    @Override
     public void stop() throws ConnectorException {
         isRun = false;
 
@@ -121,7 +129,7 @@ public abstract class ConnectorBase {
 
     protected abstract ConnectorStateBase<?> initStartState();
 
-    protected void sendMessage(byte[] message) throws ConnectorException {
+    private void sendMessage(byte[] message) throws ConnectorException {
         try {
             var packet = new DatagramPacket(message, message.length, serverAddress, serverPort);
             client.send(packet);
@@ -130,7 +138,7 @@ public abstract class ConnectorBase {
         }
     }
 
-    protected void finishConnection() throws ConnectorException {
+    private void finishConnection() throws ConnectorException {
         isRun = false;
 
         try {

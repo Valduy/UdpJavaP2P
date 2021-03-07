@@ -52,7 +52,10 @@ public class MessageHelperTests {
                         NetworkMessages.INFO),
                 Arguments.of(
                         MessageHelper.getMessage(NetworkMessages.GBYE),
-                        NetworkMessages.GBYE)
+                        NetworkMessages.GBYE),
+                Arguments.of(
+                        MessageHelper.getMessage(NetworkMessages.CONN),
+                        NetworkMessages.CONN)
         );
     }
 
