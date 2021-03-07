@@ -2,8 +2,8 @@ package tests.connectors.matchmaker;
 
 import com.company.server.matchmakers.Matchmaker;
 import com.company.server.matchmakers.MatchmakerException;
+import connectors.ConnectorException;
 import connectors.matchmaker.MatchmakerConnector;
-import connectors.matchmaker.MatchmakerConnectorException;
 import org.junit.jupiter.api.*;
 
 import java.net.DatagramSocket;
@@ -33,7 +33,7 @@ public class MatchmakerConnectorTests {
     }
 
     @AfterAll
-    public static void finish() throws MatchmakerConnectorException {
+    public static void finish() throws ConnectorException {
         connector1.stop();
         connector2.stop();
         client1.close();
@@ -42,12 +42,12 @@ public class MatchmakerConnectorTests {
 
     @Test
     @Order(1)
-    public void startTest() throws MatchmakerConnectorException {
+    public void startTest() throws ConnectorException {
         invokations = new Boolean[] {false, false};
         connector1.addFound((o, e) -> invokations[0] = true);
         connector2.addFound((o, e) -> invokations[1] = true);
-        connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort(), 10 * 1000);
-        connector2.start(client2, InetAddress.getLoopbackAddress(), matchmaker.getPort(), 10 * 1000);
+        connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort());
+        connector2.start(client2, InetAddress.getLoopbackAddress(), matchmaker.getPort());
         while (Arrays.stream(invokations).allMatch(i -> i)) Thread.onSpinWait();
     }
 
@@ -59,8 +59,8 @@ public class MatchmakerConnectorTests {
 
     @Test
     @Order(3)
-    public void stopTest() throws MatchmakerConnectorException, InterruptedException {
-        connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort(), 10 * 1000);
+    public void stopTest() throws ConnectorException, InterruptedException {
+        connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort());
         Thread.sleep(1000);
         connector1.stop();
     }

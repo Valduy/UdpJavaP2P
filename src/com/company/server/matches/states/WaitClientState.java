@@ -13,7 +13,7 @@ import java.io.StringReader;
 import java.net.InetAddress;
 
 public class WaitClientState extends MatchStateBase{
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     public WaitClientState(Match context) {
         super(context);
@@ -26,8 +26,8 @@ public class WaitClientState extends MatchStateBase{
             var publicEndPoint = new EndPoint(address, port);
 
             if (!isClient(publicEndPoint)){
-                var message = MessageHelper.toString(received);
-                var reader = new JsonReader(new StringReader(message));
+                var data = MessageHelper.toString(received);
+                var reader = new JsonReader(new StringReader(data));
                 reader.setLenient(true);
                 EndPoint localEndPoint = gson.fromJson(reader, EndPoint.class);
                 var endPoints = new EndPoints(publicEndPoint, localEndPoint);
