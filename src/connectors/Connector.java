@@ -7,8 +7,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public interface Connector<TResult> {
-    void addFound(Event<EventArgs> methodReference);
-    void removeFound(Event<EventArgs> methodReference);
+    void addConnected(Event<EventArgs> methodReference);
+    void removeConnected(Event<EventArgs> methodReference);
     void start(DatagramSocket client, InetAddress address, int port) throws ConnectorException;
     void stop() throws ConnectorException;
     TResult getResult();

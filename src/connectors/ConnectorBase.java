@@ -9,35 +9,23 @@ import java.net.*;
 import java.util.concurrent.*;
 
 public abstract class ConnectorBase<TResult> implements Connector<TResult> {
-    protected abstract class ConnectorStateBase<Connector extends ConnectorBase>{
-        private final Connector context;
+    protected abstract class ConnectorStateBase<TConnector extends ConnectorBase>{
+        private final TConnector context;
 
-        public Connector getContext(){
+        public TConnector getContext(){
             return context;
         }
 
-        public ConnectorStateBase(Connector context){
+        public ConnectorStateBase(TConnector context){
             this.context = context;
         }
 
         public abstract void send() throws ConnectorException;
         public abstract void processMessage(byte[] received) throws ConnectorException;
-
-        protected void changeState(ConnectorStateBase<Connector> state){
-            setState(state);
-        }
-
-        protected void send(byte[] message) throws ConnectorException {
-            sendMessage(message);
-        }
-
-        protected void finish() throws ConnectorException {
-            finishConnection();
-        }
     }
 
     private DatagramSocket client;
-    private Future<Void> connectionFuture;
+    private ScheduledFuture<?> connectionFuture;
     private ConnectorStateBase<?> state;
     private InetAddress serverAddress;
     private int serverPort;
@@ -69,19 +57,19 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         this.allowedFailuresCount = allowedFailuresCount;
     }
 
-    private void setState(ConnectorStateBase<?> state){
+    protected void setState(ConnectorStateBase<?> state){
         this.state = state;
     }
 
     private final EventHandler<EventArgs> connected = new EventHandler<>();
 
     @Override
-    public void addFound(Event<EventArgs> methodReference){
+    public void addConnected(Event<EventArgs> methodReference){
         connected.subscribe(methodReference);
     }
 
     @Override
-    public void removeFound(Event<EventArgs> methodReference){
+    public void removeConnected(Event<EventArgs> methodReference){
         connected.unSubscribe(methodReference);
     }
 
@@ -108,10 +96,13 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         failureCount = 0;
         isRun = true;
         var executor = Executors.newSingleThreadScheduledExecutor();
-        connectionFuture = executor.schedule(() -> {
-            connect();
-            return null;
-        }, 1, TimeUnit.SECONDS);
+        connectionFuture = executor.scheduleAtFixedRate(() -> {
+            try {
+                connect();
+            } catch (ConnectorException e) {
+                throw new RuntimeException(e);
+            }
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     @Override
@@ -119,17 +110,16 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         isRun = false;
 
         try {
+            stopConnectionTask();
             client.setSoTimeout(0);
         } catch (SocketException e) {
             throw new ConnectorException("Не удалось сбросить таймаут сокета.", e);
-        } finally {
-            stopConnectionTask();
         }
     }
 
     protected abstract ConnectorStateBase<?> initStartState();
 
-    private void sendMessage(byte[] message) throws ConnectorException {
+    protected void sendMessage(byte[] message) throws ConnectorException {
         try {
             var packet = new DatagramPacket(message, message.length, serverAddress, serverPort);
             client.send(packet);
@@ -138,7 +128,7 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         }
     }
 
-    private void finishConnection() throws ConnectorException {
+    protected void finishConnection() throws ConnectorException {
         isRun = false;
 
         try {
@@ -175,10 +165,6 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
     }
 
     private void stopConnectionTask() throws ConnectorException {
-        try {
-            connectionFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new ConnectorException(e);
-        }
+        connectionFuture.cancel(true);
     }
 }

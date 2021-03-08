@@ -1,4 +1,4 @@
-package connectors.matchmaker;
+package connectors.matchmakers;
 
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
@@ -20,13 +20,13 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
 
         @Override
         public void send() throws ConnectorException {
-            send(message);
+            getContext().sendMessage(message);
         }
 
         @Override
         public void processMessage(byte[] received) {
             if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
-                changeState(new MatchmakerConnector.WaitState(getContext()));
+                getContext().setState(new MatchmakerConnector.WaitState(getContext()));
             }
         }
     }
@@ -41,7 +41,7 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
 
         @Override
         public void send() throws ConnectorException {
-            send(message);
+            getContext().sendMessage(message);
         }
 
         @Override
@@ -52,10 +52,10 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
 
                 switch (status) {
                     case CONN:
-                        changeState(new InitialState(getContext()));
+                        getContext().setState(new InitialState(getContext()));
                         break;
                     case ABSN:
-                        changeState(new HelloState(getContext()));
+                        getContext().setState(new HelloState(getContext()));
                         break;
                 }
             }
@@ -73,7 +73,7 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
 
         @Override
         public void send() throws ConnectorException {
-            send(message);
+            getContext().sendMessage(message);
         }
 
         @Override
@@ -82,7 +82,7 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
                 var data = MessageHelper.toByteArray(received);
                 var port = ByteBuffer.wrap(data).getInt();
                 getContext().setMatchPort(port);
-                finish();
+                getContext().finishConnection();
             }
         }
     }

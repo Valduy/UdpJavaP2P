@@ -1,9 +1,9 @@
-package tests.connectors.matchmaker;
+package tests.connectors.matchmakers;
 
 import com.company.server.matchmakers.Matchmaker;
 import com.company.server.matchmakers.MatchmakerException;
 import connectors.ConnectorException;
-import connectors.matchmaker.MatchmakerConnector;
+import connectors.matchmakers.MatchmakerConnector;
 import org.junit.jupiter.api.*;
 
 import java.net.DatagramSocket;
@@ -20,7 +20,6 @@ public class MatchmakerConnectorTests {
     private static Matchmaker matchmaker;
     private static MatchmakerConnector connector1;
     private static MatchmakerConnector connector2;
-    private static volatile Boolean[] invocations;
 
     @BeforeAll
     public static void setUp() throws SocketException, MatchmakerException {
@@ -33,9 +32,10 @@ public class MatchmakerConnectorTests {
     }
 
     @AfterAll
-    public static void finish() throws ConnectorException {
+    public static void finish() throws ConnectorException, MatchmakerException {
         connector1.stop();
         connector2.stop();
+        matchmaker.stop();
         client1.close();
         client2.close();
     }
@@ -43,18 +43,18 @@ public class MatchmakerConnectorTests {
     @Test
     @Order(1)
     public void startTest() throws ConnectorException {
-        invocations = new Boolean[] {false, false};
-        connector1.addFound((o, e) -> invocations[0] = true);
-        connector2.addFound((o, e) -> invocations[1] = true);
+        var invocations = new Boolean[] {false, false};
+        connector1.addConnected((o, e) -> invocations[0] = true);
+        connector2.addConnected((o, e) -> invocations[1] = true);
         connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort());
         connector2.start(client2, InetAddress.getLoopbackAddress(), matchmaker.getPort());
-        while (Arrays.stream(invocations).allMatch(i -> i)) Thread.onSpinWait();
+        while (!Arrays.stream(invocations).allMatch(i -> i)) Thread.onSpinWait();
     }
 
     @Test
     @Order(2)
     public void resultTest() {
-        assertEquals(connector1.getMatchPort(), connector2.getMatchPort());
+        assertEquals(connector1.getResult(), connector2.getResult());
     }
 
     @Test

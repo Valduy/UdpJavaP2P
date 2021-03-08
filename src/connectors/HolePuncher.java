@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 public class HolePuncher {
     private DatagramSocket client;
     private P2PConnectionMessage connectionMessage;
-    private Future<Void> connectionFuture;
+    private ScheduledFuture<?> connectionFuture;
     private ArrayList<EndPoints> potencials;
     private HashSet<EndPoint> requesters;
     private HashSet<EndPoint> confirmed;
@@ -68,10 +68,13 @@ public class HolePuncher {
 
         isRun = true;
         var executor = Executors.newSingleThreadScheduledExecutor();
-        connectionFuture = executor.schedule(() ->{
-            connect();
-            return null;
-        }, 1, TimeUnit.SECONDS);
+        connectionFuture = executor.scheduleAtFixedRate(() ->{
+            try {
+                connect();
+            } catch (ConnectorException e) {
+                throw new RuntimeException(e);
+            }
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     public void stop() throws ConnectorException {
@@ -156,21 +159,17 @@ public class HolePuncher {
         isRun = false;
 
         try {
+            stopConnectionTask();
             client.setSoTimeout(0);
         } catch (SocketException e) {
             throw new ConnectorException("Не удалось сбросить таймаут сокета.", e);
         }
 
         connected.invoke(this, new EventArgs());
-        stopConnectionTask();
     }
 
-    private void stopConnectionTask() throws ConnectorException {
-        try {
-            connectionFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new ConnectorException(e);
-        }
+    private void stopConnectionTask() {
+        connectionFuture.cancel(true);
     }
 
     private void removeFromPotentials(EndPoint endPoint){

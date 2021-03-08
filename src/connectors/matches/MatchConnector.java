@@ -1,4 +1,4 @@
-package connectors.match;
+package connectors.matches;
 
 import com.company.network.*;
 import com.google.gson.Gson;
@@ -6,9 +6,7 @@ import com.google.gson.stream.JsonReader;
 import connectors.ConnectorBase;
 import connectors.ConnectorException;
 
-import java.io.IOException;
 import java.io.StringReader;
-import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -29,13 +27,13 @@ public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
 
         @Override
         public void send() throws ConnectorException {
-            send(message);
+            getContext().sendMessage(message);
         }
 
         @Override
         public void processMessage(byte[] received) throws ConnectorException {
             if (MessageHelper.getMessageType(received) == NetworkMessages.HLLO){
-                changeState(new WaitState(getContext()));
+                getContext().setState(new WaitState(getContext()));
             }
         }
     }
@@ -50,7 +48,7 @@ public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
 
         @Override
         public void send() throws ConnectorException {
-            send(message);
+            getContext().sendMessage(message);
         }
 
         @Override
@@ -61,7 +59,7 @@ public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
                 var reader = new JsonReader(new StringReader(data));
                 P2PConnectionMessage message = gson.fromJson(reader, P2PConnectionMessage.class);
                 setConnectionMessage(message);
-                finish();
+                getContext().finishConnection();
             }
         }
     }
