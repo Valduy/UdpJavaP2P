@@ -41,14 +41,14 @@ public class HolePuncher {
         return new ArrayList<>(confirmed);
     }
 
-    private final EventHandler<EventArgs> connected = new EventHandler<>();
+    private final EventHandler<EventArgs> punched = new EventHandler<>();
 
-    public void addFound(Event<EventArgs> methodReference){
-        connected.subscribe(methodReference);
+    public void addPunched(Event<EventArgs> methodReference){
+        punched.subscribe(methodReference);
     }
 
-    public void removeFound(Event<EventArgs> methodReference){
-        connected.unSubscribe(methodReference);
+    public void removePunched(Event<EventArgs> methodReference){
+        punched.unSubscribe(methodReference);
     }
 
     public HolePuncher(){
@@ -57,6 +57,8 @@ public class HolePuncher {
 
         var approvedData = HolePunching.CONF.toString().getBytes(StandardCharsets.US_ASCII);
         confirmedMessage = MessageHelper.getMessage(NetworkMessages.CONN, approvedData);
+
+        allowedFailuresCount = 10;
     }
 
     public void start(DatagramSocket client, P2PConnectionMessage connectionMessage){
@@ -81,11 +83,10 @@ public class HolePuncher {
         isRun = false;
 
         try {
+            stopConnectionTask();
             client.setSoTimeout(0);
         } catch (SocketException e) {
             throw new ConnectorException("Не удалось сбросить таймаут сокета.", e);
-        } finally {
-            stopConnectionTask();
         }
     }
 
@@ -165,7 +166,7 @@ public class HolePuncher {
             throw new ConnectorException("Не удалось сбросить таймаут сокета.", e);
         }
 
-        connected.invoke(this, new EventArgs());
+        punched.invoke(this, new EventArgs());
     }
 
     private void stopConnectionTask() {
