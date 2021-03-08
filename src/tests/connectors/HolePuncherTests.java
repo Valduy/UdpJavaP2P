@@ -12,6 +12,8 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Arrays;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class HolePuncherTests {
     private static Match match;
@@ -23,7 +25,7 @@ public class HolePuncherTests {
     private static HolePuncher puncher2;
 
     @BeforeAll
-    public static void setUp() throws SocketException, MatchException, ConnectorException {
+    public static void setUp() throws SocketException, MatchException {
         match = new Match(2);
         match.start(30 * 1000);
         client1 = new DatagramSocket();
@@ -55,6 +57,13 @@ public class HolePuncherTests {
         puncher1.start(client1, connector1.getResult());
         puncher2.start(client2, connector2.getResult());
         while (!Arrays.stream(invocations).allMatch(i -> i)) Thread.onSpinWait();
+    }
+
+    @Test
+    @Order(2)
+    public void failureTest(){
+        puncher1.addPunched((o, e) -> assertThrows(ConnectorException.class, () -> puncher1.getClients()));
+        puncher1.start(client1, connector1.getResult());
     }
 
     private static void connectViaMatch() throws ConnectorException {

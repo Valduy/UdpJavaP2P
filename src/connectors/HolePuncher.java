@@ -37,7 +37,13 @@ public class HolePuncher {
         this.allowedFailuresCount = allowedFailuresCount;
     }
 
-    public ArrayList<EndPoint> getClients(){
+    public ArrayList<EndPoint> getClients() throws ConnectorException {
+        try {
+            connectionFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new ConnectorException("Во время соединения произошла ошибка", e);
+        }
+
         return new ArrayList<>(confirmed);
     }
 
@@ -74,6 +80,7 @@ public class HolePuncher {
             try {
                 connect();
             } catch (ConnectorException e) {
+                punched.invoke(this, new EventArgs());
                 throw new RuntimeException(e);
             }
         }, 0, 1, TimeUnit.SECONDS);

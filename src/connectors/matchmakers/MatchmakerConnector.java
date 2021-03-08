@@ -64,7 +64,6 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
 
     public class InitialState extends ConnectorStateBase<MatchmakerConnector> {
         private final byte[] message;
-        private final Gson gson = new Gson();
 
         public InitialState(MatchmakerConnector context) {
             super(context);
