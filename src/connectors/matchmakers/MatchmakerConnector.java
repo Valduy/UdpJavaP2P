@@ -3,11 +3,13 @@ package connectors.matchmakers;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.UserStatus;
-import com.google.gson.Gson;
 import connectors.ConnectorBase;
 import connectors.ConnectorException;
 
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutionException;
 
 public class MatchmakerConnector extends ConnectorBase<Integer> {
     private class HelloState extends ConnectorStateBase<MatchmakerConnector>{
@@ -86,15 +88,25 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
         }
     }
 
-    private int matchPort;
+    private Integer matchPort;
 
     @Override
-    public Integer getResult() {
+    public Integer getResult() throws ConnectorException {
+        if (matchPort == null){
+            throw new ConnectorException("Не удалось получить порт матча.");
+        }
+
         return matchPort;
     }
 
     private void setMatchPort(int matchPort){
         this.matchPort = matchPort;
+    }
+
+    @Override
+    public void start(DatagramSocket client, InetAddress address, int port) throws ConnectorException {
+        matchPort = null;
+        super.start(client, address, port);
     }
 
     @Override

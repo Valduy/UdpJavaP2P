@@ -61,7 +61,7 @@ public class HolePuncherTests {
 
     @Test
     @Order(2)
-    public void failureTest(){
+    public void failureTest() throws ConnectorException {
         puncher1.addPunched((o, e) -> assertThrows(ConnectorException.class, () -> puncher1.getClients()));
         puncher1.start(client1, connector1.getResult());
     }

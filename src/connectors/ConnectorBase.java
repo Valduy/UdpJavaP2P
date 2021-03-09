@@ -61,6 +61,10 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         this.state = state;
     }
 
+    protected ScheduledFuture<?> getConnectionFuture() {
+        return connectionFuture;
+    }
+
     private final EventHandler<EventArgs> connected = new EventHandler<>();
 
     @Override
@@ -166,6 +170,8 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
     }
 
     private void stopConnectionTask() throws ConnectorException {
-        connectionFuture.cancel(true);
+        if (!connectionFuture.isDone() && !connectionFuture.isCancelled()){
+            connectionFuture.cancel(true);
+        }
     }
 }

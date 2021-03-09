@@ -1,12 +1,15 @@
 package client.models.interfaces;
 
+import connectors.ConnectorException;
 import events.Event;
 import events.EventArgs;
 
-public interface MenuModel {
-    void addFound(Event<EventArgs> methodReference);
-    void removeFound(Event<EventArgs> methodReference);
+import java.net.DatagramSocket;
 
-    void startSearch();
-    void stopSearch();
+public interface MenuModel {
+    int getMatchPort() throws ConnectorException;
+    void addConnected(Event<EventArgs> methodReference);
+    void removeConnected(Event<EventArgs> methodReference);
+    void startSearch(DatagramSocket client) throws ConnectorException;
+    void stopSearch() throws ConnectorException;
 }

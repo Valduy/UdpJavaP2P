@@ -10,6 +10,7 @@ import java.io.StringReader;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ExecutionException;
 
 public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
     private class HelloState extends ConnectorStateBase<MatchConnector>{
@@ -68,7 +69,11 @@ public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
     private P2PConnectionMessage connectionMessage;
 
     @Override
-    public P2PConnectionMessage getResult(){
+    public P2PConnectionMessage getResult() throws ConnectorException {
+        if (connectionMessage == null){
+            throw new ConnectorException("Не удалось получить информацию для P2P соединения.");
+        }
+
         return connectionMessage;
     }
 
@@ -88,6 +93,7 @@ public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
             throw new ConnectorException("Не удалось узнать IP машины в LAN", e);
         }
 
+        connectionMessage = null;
         super.start(client, address, port);
     }
 

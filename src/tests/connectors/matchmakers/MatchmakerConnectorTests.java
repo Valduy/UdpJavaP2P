@@ -53,7 +53,7 @@ public class MatchmakerConnectorTests {
 
     @Test
     @Order(2)
-    public void resultTest() {
+    public void resultTest() throws ConnectorException {
         assertEquals(connector1.getResult(), connector2.getResult());
     }
 
