@@ -71,7 +71,7 @@ public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
     @Override
     public P2PConnectionMessage getResult() throws ConnectorException {
         if (connectionMessage == null){
-            throw new ConnectorException("Не удалось получить информацию для P2P соединения.");
+            throw new ConnectorException("Не удалось получить информацию для P2P соединения.", getException());
         }
 
         return connectionMessage;

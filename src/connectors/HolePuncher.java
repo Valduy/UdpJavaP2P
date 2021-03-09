@@ -13,12 +13,14 @@ import java.util.HashSet;
 import java.util.concurrent.*;
 
 public class HolePuncher {
+    private Exception exception;
     private DatagramSocket client;
     private P2PConnectionMessage connectionMessage;
     private ScheduledFuture<?> connectionFuture;
     private ArrayList<EndPoints> potencials;
     private HashSet<EndPoint> requesters;
     private HashSet<EndPoint> confirmed;
+    private ArrayList<EndPoint> result;
     private final byte[] checkedMessage;
     private final byte[] confirmedMessage;
     private boolean isRun;
@@ -38,13 +40,11 @@ public class HolePuncher {
     }
 
     public ArrayList<EndPoint> getClients() throws ConnectorException {
-        try {
-            connectionFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new ConnectorException("Во время соединения произошла ошибка", e);
+        if (result == null){
+            throw new ConnectorException("Не удалось произвести соединение с клиентами.", exception);
         }
 
-        return new ArrayList<>(confirmed);
+        return result;
     }
 
     private final EventHandler<EventArgs> punched = new EventHandler<>();
@@ -73,6 +73,7 @@ public class HolePuncher {
         potencials = new ArrayList<>(connectionMessage.clients);
         requesters = new HashSet<>();
         confirmed = new HashSet<>();
+        result = null;
 
         isRun = true;
         var executor = Executors.newSingleThreadScheduledExecutor();
@@ -80,6 +81,7 @@ public class HolePuncher {
             try {
                 connect();
             } catch (ConnectorException e) {
+                exception = e;
                 punched.invoke(this, new EventArgs());
                 throw new RuntimeException(e);
             }
@@ -149,6 +151,7 @@ public class HolePuncher {
             }
 
             if (potencials.size() == 0 && requesters.size() == 0){
+                result = new ArrayList<>(confirmed);
                 finishConnection();
             }
         }

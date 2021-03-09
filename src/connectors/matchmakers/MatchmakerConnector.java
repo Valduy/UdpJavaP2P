@@ -9,7 +9,6 @@ import connectors.ConnectorException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutionException;
 
 public class MatchmakerConnector extends ConnectorBase<Integer> {
     private class HelloState extends ConnectorStateBase<MatchmakerConnector>{
@@ -93,7 +92,7 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
     @Override
     public Integer getResult() throws ConnectorException {
         if (matchPort == null){
-            throw new ConnectorException("Не удалось получить порт матча.");
+            throw new ConnectorException("Не удалось получить порт матча.", getException());
         }
 
         return matchPort;

@@ -24,6 +24,7 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         public abstract void processMessage(byte[] received) throws ConnectorException;
     }
 
+    private Exception exception;
     private DatagramSocket client;
     private ScheduledFuture<?> connectionFuture;
     private ConnectorStateBase<?> state;
@@ -61,6 +62,14 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         this.state = state;
     }
 
+    protected Exception getException(){
+        return exception;
+    }
+
+    protected void setException(Exception exception){
+        this.exception = exception;
+    }
+
     protected ScheduledFuture<?> getConnectionFuture() {
         return connectionFuture;
     }
@@ -88,6 +97,7 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         this.serverAddress = address;
         this.serverPort = port;
         this.client = client;
+        exception = null;
         state = initStartState();
 
         try {
@@ -105,7 +115,7 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
                 connect();
             } catch (ConnectorException e) {
                 connected.invoke(this, new EventArgs());
-                throw new RuntimeException(e);
+                setException(e);
             }
         }, 0, 1, TimeUnit.SECONDS);
     }
@@ -159,13 +169,12 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
             if (e.getCause() instanceof SocketTimeoutException) {
                 failureCount++;
             } else{
-                throw new ConnectorException(e);
+                throw new ConnectorException("Произошла ошибка при попытке принять пакет", e);
             }
         }
 
         if (failureCount >= allowedFailuresCount){
-            var e = new TimeoutException();
-            throw new ConnectorException("Не удается установить соединение с сервером", e);
+            throw new ConnectorException("Не удается установить соединение с сервером");
         }
     }
 
