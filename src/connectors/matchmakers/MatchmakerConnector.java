@@ -92,7 +92,7 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
     @Override
     public Integer getResult() throws ConnectorException {
         if (matchPort == null){
-            throw new ConnectorException("Не удалось получить порт матча.", getException());
+            throw new ConnectorException("Возникли проблемы при попытке подключиться к серверу.", getException());
         }
 
         return matchPort;

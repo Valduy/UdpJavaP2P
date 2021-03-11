@@ -116,6 +116,7 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
             } catch (ConnectorException e) {
                 connected.invoke(this, new EventArgs());
                 setException(e);
+                throw new RuntimeException(e);
             }
         }, 0, 1, TimeUnit.SECONDS);
     }

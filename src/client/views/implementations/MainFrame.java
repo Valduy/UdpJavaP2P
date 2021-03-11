@@ -13,15 +13,14 @@ public class MainFrame extends JFrame implements MainView {
         setSize(600, 450);
         setResizable(false);
 
-        component = new Menu();
-        getContentPane().add(component);
-
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
 
     @Override
     public void setComponent(JComponent component) {
+        remove(component);
         this.component = component;
+        add(component);
     }
 }

@@ -17,9 +17,10 @@ public class Main {
         try {
             var streamReader = new InputStreamReader(System.in);
             var bufferedReader = new BufferedReader(streamReader);
+            var port = Integer.parseInt(args[0]);
 
             var matchmaker = new Matchmaker(2);
-            matchmaker.start(4756);
+            matchmaker.start(port);
 
             while (true){
                 String command = bufferedReader.readLine();
