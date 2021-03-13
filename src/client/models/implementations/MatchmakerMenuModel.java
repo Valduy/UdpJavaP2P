@@ -12,7 +12,7 @@ import java.net.DatagramSocket;
 
 public class MatchmakerMenuModel implements MenuModel {
     private class MatchmakerConnectorTask extends SwingWorker<Void, Integer>{
-        private final MatchmakerConnector connector = new MatchmakerConnector();
+       // private final MatchmakerConnector connector = new MatchmakerConnector();
         private final DatagramSocket socket;
 
         public MatchmakerConnectorTask(DatagramSocket socket){
@@ -21,35 +21,36 @@ public class MatchmakerMenuModel implements MenuModel {
 
         @Override
         protected Void doInBackground() throws Exception {
-            connector.start(socket, Settings.serverAddress, Settings.serverPort);
+            //connector.start(socket, Settings.serverAddress, Settings.serverPort);
             return null;
         }
     }
 
-    private final MatchmakerConnector connector = new MatchmakerConnector();
+    //private final MatchmakerConnector connector = new MatchmakerConnector();
 
     @Override
     public int getMatchPort() throws ConnectorException {
-        return connector.getResult();
+        //return connector.getResult();
+        return 0;
     }
 
     @Override
     public void addConnected(Event<EventArgs> methodReference) {
-        connector.addConnected(methodReference);
+        //connector.addConnected(methodReference);
     }
 
     @Override
     public void removeConnected(Event<EventArgs> methodReference) {
-        connector.removeConnected(methodReference);
+        //connector.removeConnected(methodReference);
     }
 
     @Override
     public void startSearch(DatagramSocket client) throws ConnectorException {
-        connector.start(client, Settings.serverAddress, Settings.serverPort);
+        //connector.start(client, Settings.serverAddress, Settings.serverPort);
     }
 
     @Override
     public void stopSearch() throws ConnectorException {
-        connector.stop();
+        //connector.stop();
     }
 }

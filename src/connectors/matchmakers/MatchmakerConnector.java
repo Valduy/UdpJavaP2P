@@ -81,31 +81,20 @@ public class MatchmakerConnector extends ConnectorBase<Integer> {
             if (MessageHelper.getMessageType(received) == NetworkMessages.INIT){
                 var data = MessageHelper.toByteArray(received);
                 var port = ByteBuffer.wrap(data).getInt();
-                getContext().setMatchPort(port);
+                getContext().setResult(port);
                 getContext().finishConnection();
             }
         }
     }
 
-    private Integer matchPort;
-
-    @Override
-    public Integer getResult() throws ConnectorException {
-        if (matchPort == null){
-            throw new ConnectorException("Возникли проблемы при попытке подключиться к серверу.", getException());
-        }
-
-        return matchPort;
-    }
-
-    private void setMatchPort(int matchPort){
-        this.matchPort = matchPort;
+    public MatchmakerConnector(DatagramSocket client, InetAddress address, int port){
+        super(client, address, port);
     }
 
     @Override
-    public void start(DatagramSocket client, InetAddress address, int port) throws ConnectorException {
-        matchPort = null;
-        super.start(client, address, port);
+    public Integer call() throws ConnectorException {
+        setResult(null);
+        return super.call();
     }
 
     @Override

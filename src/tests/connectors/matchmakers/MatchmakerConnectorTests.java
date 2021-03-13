@@ -32,14 +32,12 @@ public class MatchmakerConnectorTests {
         future = executor.submit(matchmaker);
         client1 = new DatagramSocket();
         client2 = new DatagramSocket();
-        connector1 = new MatchmakerConnector();
-        connector2 = new MatchmakerConnector();
+        connector1 = new MatchmakerConnector(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort());
+        connector2 = new MatchmakerConnector(client2, InetAddress.getLoopbackAddress(), matchmaker.getPort());
     }
 
     @AfterAll
     public static void finish() throws ConnectorException, ExecutionException, InterruptedException {
-        connector1.stop();
-        connector2.stop();
         matchmaker.cancel();
         future.get();
         client1.close();
@@ -48,26 +46,10 @@ public class MatchmakerConnectorTests {
 
     @Test
     @Order(1)
-    public void startTest() throws ConnectorException {
-        var invocations = new Boolean[] {false, false};
-        connector1.addConnected((o, e) -> invocations[0] = true);
-        connector2.addConnected((o, e) -> invocations[1] = true);
-        connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort());
-        connector2.start(client2, InetAddress.getLoopbackAddress(), matchmaker.getPort());
-        while (!Arrays.stream(invocations).allMatch(i -> i)) Thread.onSpinWait();
-    }
-
-    @Test
-    @Order(2)
-    public void resultTest() throws ConnectorException {
-        assertEquals(connector1.getResult(), connector2.getResult());
-    }
-
-    @Test
-    @Order(3)
-    public void stopTest() throws ConnectorException, InterruptedException {
-        connector1.start(client1, InetAddress.getLoopbackAddress(), matchmaker.getPort());
-        Thread.sleep(1000);
-        connector1.stop();
+    public void Test() throws ExecutionException, InterruptedException {
+        var executor = Executors.newFixedThreadPool(2);
+        var future1 = executor.submit(connector1);
+        var future2 = executor.submit(connector2);
+        assertEquals(future1.get(), future2.get());
     }
 }

@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.concurrent.*;
 
-public abstract class ConnectorBase<TResult> implements Connector<TResult> {
+public abstract class ConnectorBase<TResult> implements Callable<TResult> {
     protected abstract class ConnectorStateBase<TConnector extends ConnectorBase>{
         private final TConnector context;
 
@@ -24,15 +24,14 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         public abstract void processMessage(byte[] received) throws ConnectorException;
     }
 
-    private Exception exception;
     private DatagramSocket client;
-    private ScheduledFuture<?> connectionFuture;
     private ConnectorStateBase<?> state;
     private InetAddress serverAddress;
     private int serverPort;
     private int failureCount;
     private int allowedFailuresCount;
     private boolean isRun;
+    private TResult result;
 
     public boolean getIsRun(){
         return isRun;
@@ -62,75 +61,35 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
         this.state = state;
     }
 
-    protected Exception getException(){
-        return exception;
-    }
-
-    protected void setException(Exception exception){
-        this.exception = exception;
-    }
-
-    protected ScheduledFuture<?> getConnectionFuture() {
-        return connectionFuture;
-    }
-
     private final EventHandler<EventArgs> connected = new EventHandler<>();
-
-    @Override
-    public void addConnected(Event<EventArgs> methodReference){
-        connected.subscribe(methodReference);
-    }
-
-    @Override
-    public void removeConnected(Event<EventArgs> methodReference){
-        connected.unSubscribe(methodReference);
-    }
 
     public ConnectorBase(){
         allowedFailuresCount = 10;
     }
 
-    @Override
-    public void start(DatagramSocket client, InetAddress address, int port)
-            throws ConnectorException
-    {
+    protected void setResult(TResult result){
+        this.result = result;
+    }
+
+    public ConnectorBase(DatagramSocket client, InetAddress address, int port){
+        this.client = client;
         this.serverAddress = address;
         this.serverPort = port;
-        this.client = client;
-        exception = null;
-        state = initStartState();
-
-        try {
-            var socketTimeout = 100;
-            client.setSoTimeout(socketTimeout);
-        } catch (SocketException e) {
-            throw new ConnectorException("Не удалось установить таймаут сокета.", e);
-        }
-
-        failureCount = 0;
-        isRun = true;
-        var executor = Executors.newSingleThreadScheduledExecutor();
-        connectionFuture = executor.scheduleAtFixedRate(() -> {
-            try {
-                connect();
-            } catch (ConnectorException e) {
-                connected.invoke(this, new EventArgs());
-                setException(e);
-                throw new RuntimeException(e);
-            }
-        }, 0, 1, TimeUnit.SECONDS);
     }
 
     @Override
-    public void stop() throws ConnectorException {
-        isRun = false;
+    public TResult call() throws ConnectorException {
+        state = initStartState();
+        setSocketTimeout();
+        connectionLoop();
+        failureCount = 0;
+        isRun = true;
+        return result;
+    }
 
-        try {
-            stopConnectionTask();
-            client.setSoTimeout(0);
-        } catch (SocketException e) {
-            throw new ConnectorException("Не удалось сбросить таймаут сокета.", e);
-        }
+    public void cancel() throws ConnectorException {
+        isRun = false;
+        resetSocketTimeout();
     }
 
     protected abstract ConnectorStateBase<?> initStartState();
@@ -145,19 +104,32 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
     }
 
     protected void finishConnection() throws ConnectorException {
-        isRun = false;
+        cancel();
+    }
 
+    private void setSocketTimeout() throws ConnectorException {
+        try {
+            client.setSoTimeout(100);
+        } catch (SocketException e) {
+            throw new ConnectorException("Не удалось установить таймаут сокета.", e);
+        }
+    }
+
+    private void resetSocketTimeout() throws ConnectorException {
         try {
             client.setSoTimeout(0);
         } catch (SocketException e) {
             throw new ConnectorException("Не удалось сбросить таймаут сокета.", e);
         }
-
-        connected.invoke(this, new EventArgs());
-        stopConnectionTask();
     }
 
-    private void connect() throws ConnectorException {
+    private void connectionLoop() throws ConnectorException {
+        while (isRun){
+            connectionFrame();
+        }
+    }
+
+    private void connectionFrame() throws ConnectorException {
         state.send();
 
         try {
@@ -176,12 +148,6 @@ public abstract class ConnectorBase<TResult> implements Connector<TResult> {
 
         if (failureCount >= allowedFailuresCount){
             throw new ConnectorException("Не удается установить соединение с сервером");
-        }
-    }
-
-    private void stopConnectionTask() throws ConnectorException {
-        if (!connectionFuture.isDone() && !connectionFuture.isCancelled()){
-            connectionFuture.cancel(true);
         }
     }
 }

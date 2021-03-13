@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class NewMatchTest {
+public class MatchTest {
     private static int timePerAction;
     private static Match match;
     private static Future<?> future;

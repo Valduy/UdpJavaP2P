@@ -58,42 +58,32 @@ public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
                 var data = MessageHelper.toString(received);
                 var reader = new JsonReader(new StringReader(data));
                 P2PConnectionMessage message = gson.fromJson(reader, P2PConnectionMessage.class);
-                setConnectionMessage(message);
+                setResult(message);
                 getContext().finishConnection();
             }
         }
     }
 
-    private InetAddress lanIp;
-    private P2PConnectionMessage connectionMessage;
-
-    @Override
-    public P2PConnectionMessage getResult() throws ConnectorException {
-        if (connectionMessage == null){
-            throw new ConnectorException("Не удалось получить информацию для P2P соединения.", getException());
-        }
-
-        return connectionMessage;
-    }
-
-    private void setConnectionMessage(P2PConnectionMessage connectionMessage){
-        this.connectionMessage = connectionMessage;
-    }
+    private final InetAddress lanIp;
 
     private InetAddress getLanIp(){
         return lanIp;
     }
 
-    @Override
-    public void start(DatagramSocket client, InetAddress address, int port) throws ConnectorException {
+    public MatchConnector(DatagramSocket client, InetAddress address, int port) throws ConnectorException {
+        super(client, address, port);
+
         try {
             lanIp = LanIpHelper.getLocalHostLANAddress();
         } catch (UnknownHostException e) {
             throw new ConnectorException("Не удалось узнать IP машины в LAN", e);
         }
+    }
 
-        connectionMessage = null;
-        super.start(client, address, port);
+    @Override
+    public P2PConnectionMessage call() throws ConnectorException {
+        setResult(null);
+        return super.call();
     }
 
     @Override
