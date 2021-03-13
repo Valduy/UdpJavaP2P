@@ -16,7 +16,7 @@ public class HolePuncher {
     private Exception exception;
     private DatagramSocket client;
     private P2PConnectionMessage connectionMessage;
-    private ScheduledFuture<?> connectionFuture;
+    private Future<?> connectionFuture;
     private ArrayList<EndPoints> potencials;
     private HashSet<EndPoint> requesters;
     private HashSet<EndPoint> confirmed;
@@ -68,6 +68,7 @@ public class HolePuncher {
     }
 
     public void start(DatagramSocket client, P2PConnectionMessage connectionMessage){
+        System.out.println("Холпанчер запущен");
         this.client = client;
         this.connectionMessage = connectionMessage;
         potencials = new ArrayList<>(connectionMessage.clients);
@@ -76,8 +77,8 @@ public class HolePuncher {
         result = null;
 
         isRun = true;
-        var executor = Executors.newSingleThreadScheduledExecutor();
-        connectionFuture = executor.scheduleAtFixedRate(() ->{
+        var executor = Executors.newSingleThreadExecutor();
+        connectionFuture = executor.submit(() ->{
             try {
                 connect();
             } catch (ConnectorException e) {
@@ -85,7 +86,7 @@ public class HolePuncher {
                 punched.invoke(this, new EventArgs());
                 throw new RuntimeException(e);
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        });
     }
 
     public void stop() throws ConnectorException {
@@ -100,29 +101,43 @@ public class HolePuncher {
     }
 
     private void connect() throws ConnectorException {
-        send();
-
         try {
-            var buffer = new byte[512];
-            var packet = new DatagramPacket(buffer, buffer.length);
-            client.receive(packet);
-            failureCount = 0;
-            processMessage(packet.getAddress(), packet.getPort(), packet.getData());
-        } catch (IOException e) {
-            if (e.getCause() instanceof SocketTimeoutException) {
-                failureCount++;
-            } else{
-                throw new ConnectorException(e);
-            }
+            client.setSoTimeout(100);
+        } catch (SocketException e) {
+            throw new ConnectorException("Не удалось изменить таймаут сокета.", e);
         }
 
-        if (failureCount >= allowedFailuresCount){
-            var e = new TimeoutException();
-            throw new ConnectorException("Не удается установить соединение с сервером", e);
+        while (isRun){
+            try {
+                Thread.sleep(1000);
+                send();
+                var buffer = new byte[512];
+                var packet = new DatagramPacket(buffer, buffer.length);
+                System.out.println("Жду сообщений...");
+                client.receive(packet);
+                failureCount = 0;
+                processMessage(packet.getAddress(), packet.getPort(), packet.getData());
+
+            } catch (IOException | InterruptedException e) {
+                if (e instanceof SocketTimeoutException) {
+                    System.out.print("Кажется, никто нам не пишет(((.");
+                    failureCount++;
+                } else{
+                    throw new ConnectorException(e);
+                }
+            }
+
+            if (failureCount >= allowedFailuresCount){
+                System.out.println("Давно не получал сообщений. Видимо, соединиться невозможно...");
+                var e = new TimeoutException();
+                throw new ConnectorException("Не удается установить соединение с сервером", e);
+            }
         }
     }
 
     private void send() throws ConnectorException {
+        System.out.println("Отсылаю пакеты всем потенциальным клиентам...");
+
         for (var endPoints : potencials){
             sendMessage(endPoints.publicEndPoint, checkedMessage);
             sendMessage(endPoints.privateEndPoint, checkedMessage);
@@ -134,6 +149,8 @@ public class HolePuncher {
     }
 
     private void processMessage(InetAddress address, int port, byte[] received) throws ConnectorException {
+        System.out.println("Попытаюсь обработать полученное сообщение...");
+
         if (MessageHelper.getMessageType(received) == NetworkMessages.CONN){
             var data = MessageHelper.toString(received).trim();
             var state = HolePunching.valueOf(data);
@@ -141,16 +158,20 @@ public class HolePuncher {
 
             switch (state){
                 case CHCK:
+                    System.out.printf("Проверка от %s:%s\n", endPoint.address, endPoint.port);
                     removeFromPotentials(endPoint);
                     requesters.add(endPoint);
                     break;
                 case CONF:
+                    System.out.printf("Подтверждение от %s:%s\n", endPoint.address, endPoint.port);
+                    removeFromPotentials(endPoint);
                     requesters.remove(endPoint);
                     confirmed.add(endPoint);
                     break;
             }
 
             if (potencials.size() == 0 && requesters.size() == 0){
+                System.out.print("Удалось соединиться со всеми клиентами!");
                 result = new ArrayList<>(confirmed);
                 finishConnection();
             }
@@ -170,7 +191,7 @@ public class HolePuncher {
         isRun = false;
 
         try {
-            stopConnectionTask();
+            //stopConnectionTask();
             client.setSoTimeout(0);
         } catch (SocketException e) {
             throw new ConnectorException("Не удалось сбросить таймаут сокета.", e);

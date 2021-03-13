@@ -19,8 +19,13 @@ public class MainFrame extends JFrame implements MainView {
 
     @Override
     public void setComponent(JComponent component) {
-        remove(component);
+        if (this.component != null){
+            remove(this.component);
+        }
+
         this.component = component;
         add(component);
+        component.setVisible(true);
+        validate();
     }
 }

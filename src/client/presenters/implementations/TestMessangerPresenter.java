@@ -1,8 +1,8 @@
 package client.presenters.implementations;
 
 import client.ConnectionResult;
-import client.models.interfaces.MessangerModel;
-import client.presenters.interfaces.MessangerPresenter;
+import client.models.interfaces.MessengerModel;
+import client.presenters.interfaces.MessengerPresenter;
 import client.services.interfaces.MessageBoxService;
 import client.views.interfaces.ChildView;
 import client.views.interfaces.MessangerView;
@@ -10,9 +10,9 @@ import client.views.interfaces.MessangerView;
 import java.io.IOException;
 import java.net.DatagramSocket;
 
-public class TestMessangerPresenter implements MessangerPresenter {
+public class TestMessangerPresenter implements MessengerPresenter {
     private final MessangerView view;
-    private final MessangerModel model;
+    private final MessengerModel model;
     private final MessageBoxService messageBoxService;
 
     @Override
@@ -22,7 +22,7 @@ public class TestMessangerPresenter implements MessangerPresenter {
 
     public TestMessangerPresenter(
             MessangerView view,
-            MessangerModel model,
+            MessengerModel model,
             MessageBoxService messageBoxService)
     {
         this.view = view;
@@ -43,7 +43,7 @@ public class TestMessangerPresenter implements MessangerPresenter {
     }
 
     @Override
-    public void start(DatagramSocket socket, ConnectionResult result) throws IOException {
+    public void start(DatagramSocket socket, ConnectionResult result) throws Exception {
         model.start(socket, result);
     }
 

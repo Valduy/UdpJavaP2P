@@ -3,13 +3,16 @@ package tests.server.matchmakers;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.UserStatus;
-import com.company.server.matchmakers.Matchmaker;
 import com.company.server.matchmakers.MatchmakerException;
+import com.company.server.matchmakers.Matchmaker;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,20 +22,25 @@ public class MatchmakerTest {
     private static int timePerAction;
     private static Matchmaker matchmaker;
     private static DatagramSocket client;
+    private static int port = 54321;
+
+    private static Future<?> future;
 
     @BeforeAll
     public static void setUp() throws SocketException, MatchmakerException {
         timePerAction = 10 * 1000;
-        matchmaker = new Matchmaker(2);
-        matchmaker.start();
+        matchmaker = new Matchmaker(2, port);
+        var executor = Executors.newSingleThreadExecutor();
+        future = executor.submit(matchmaker);
         client = new DatagramSocket();
         var socketTimeout = 1000;
         client.setSoTimeout(socketTimeout);
     }
 
     @AfterAll
-    public static void finish() throws MatchmakerException {
-        matchmaker.stop();
+    public static void finish() throws ExecutionException, InterruptedException {
+        matchmaker.cancel();
+        future.get();
         client.close();
     }
 

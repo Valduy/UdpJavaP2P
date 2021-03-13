@@ -1,8 +1,8 @@
 package tests.server.matches;
 
 import com.company.network.*;
-import com.company.server.matches.Match;
 import com.company.server.matches.MatchException;
+import com.company.server.matches.Match;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
 import org.junit.jupiter.api.*;
@@ -10,14 +10,18 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class MatchTest {
+public class NewMatchTest {
     private static int timePerAction;
     private static Match match;
+    private static Future<?> future;
     private static DatagramSocket client1;
     private static DatagramSocket client2;
     private static byte[] message1;
@@ -28,8 +32,9 @@ public class MatchTest {
     private static void setUp() throws SocketException, MatchException {
         timePerAction = 10 * 1000;
         gson = new Gson();
-        match = new Match(2);
-        match.start(30 * 1000);
+        match = new Match(2, 30 * 1000);
+        var executor = Executors.newSingleThreadExecutor();
+        future = executor.submit(match);
         client1 = new DatagramSocket();
         client2 = new DatagramSocket();
         message1 = getHelloMessage(client1);
@@ -37,8 +42,9 @@ public class MatchTest {
     }
 
     @AfterAll
-    private static void finish() throws MatchException {
-        match.stop();
+    private static void finish() throws ExecutionException, InterruptedException {
+        match.cancel();
+        future.get();
         client1.close();
         client2.close();
     }

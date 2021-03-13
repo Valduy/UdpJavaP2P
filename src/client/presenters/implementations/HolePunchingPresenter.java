@@ -2,7 +2,6 @@ package client.presenters.implementations;
 
 import client.ConnectionResult;
 import client.Settings;
-import client.models.implementations.HolePunchingModel;
 import client.models.interfaces.LoadModel;
 import client.presenters.interfaces.LoadPresenter;
 import client.views.interfaces.ChildView;
@@ -19,7 +18,7 @@ public class HolePunchingPresenter implements LoadPresenter {
 
     @Override
     public ChildView getView() {
-        return null;
+        return loadView;
     }
 
     @Override

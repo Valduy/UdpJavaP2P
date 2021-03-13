@@ -10,19 +10,24 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MatchConnectorTests {
     private static Match match;
+    private static Future<?> future;
     private static DatagramSocket client1;
     private static DatagramSocket client2;
     private static MatchConnector connector1;
     private static MatchConnector connector2;
 
     @BeforeAll
-    public static void setUp() throws SocketException, MatchException {
-        match = new Match(2);
-        match.start(30 * 1000);
+    public static void setUp() throws SocketException {
+        match = new Match(2, 30 * 1000);
+        var executor = Executors.newSingleThreadExecutor();
+        future = executor.submit(match);
         client1 = new DatagramSocket();
         client2 = new DatagramSocket();
         connector1 = new MatchConnector();
@@ -30,10 +35,11 @@ public class MatchConnectorTests {
     }
 
     @AfterAll
-    public static void finish() throws ConnectorException, MatchException {
+    public static void finish() throws ConnectorException, ExecutionException, InterruptedException {
         connector1.stop();
         connector2.stop();
-        match.stop();
+        match.cancel();
+        future.get();
         client1.close();
         client2.close();
     }

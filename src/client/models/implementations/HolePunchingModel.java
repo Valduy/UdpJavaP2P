@@ -13,7 +13,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class HolePunchingModel implements LoadModel {
-    private EventHandler<EventArgs> connected = new EventHandler<>();
+    private final EventHandler<EventArgs> connected = new EventHandler<>();
     private final MatchConnector matchConnector = new MatchConnector();
     private final HolePuncher holePuncher = new HolePuncher();
     private DatagramSocket socket;

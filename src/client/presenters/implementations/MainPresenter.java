@@ -1,22 +1,19 @@
 package client.presenters.implementations;
 
-import client.presenters.interfaces.FieldPresenter;
 import client.presenters.interfaces.LoadPresenter;
 import client.presenters.interfaces.MenuPresenter;
-import client.presenters.interfaces.MessangerPresenter;
+import client.presenters.interfaces.MessengerPresenter;
 import client.services.interfaces.MessageBoxService;
 import client.views.interfaces.MainView;
 import connectors.ConnectorException;
 import events.EventArgs;
-
-import java.io.IOException;
 
 public class MainPresenter {
     private final MainView view;
     private final MenuPresenter menuPresenter;
     private final LoadPresenter loadPresenter;
     //private final FieldPresenter fieldPresenter;
-    private final MessangerPresenter messangerPresenter;
+    private final MessengerPresenter messangerPresenter;
     private final MessageBoxService messageBoxService;
 
     public MainPresenter(
@@ -24,7 +21,7 @@ public class MainPresenter {
             MenuPresenter menuPresenter,
             LoadPresenter loadPresenter,
             //FieldPresenter fieldPresenter,
-            MessangerPresenter messangerPresenter,
+            MessengerPresenter messangerPresenter,
             MessageBoxService messageBoxService)
     {
         this.view = view;
@@ -50,10 +47,10 @@ public class MainPresenter {
     }
 
     private void onConnected(Object sender, EventArgs e){
-        view.setComponent(messangerPresenter.getView().toComponent());
         try {
             messangerPresenter.start(menuPresenter.getSocket(), loadPresenter.getConnectionMessage());
-        } catch (IOException | ConnectorException ex) {
+            view.setComponent(messangerPresenter.getView().toComponent());
+        } catch (Exception ex) {
             messageBoxService.showMessageDialog(ex.getMessage());
         }
     }

@@ -10,7 +10,7 @@ import java.awt.*;
 
 public class Messanger extends JComponent implements MessangerView {
     private final EventHandler<EventArgs> messaged = new EventHandler<>();
-    private final TextArea textArea = new TextArea();
+    private final JTextArea textArea = new JTextArea();
     private final JPanel messangerPanel = new JPanel();
     private final TextField textField = new TextField();
     private final Button button = new Button();

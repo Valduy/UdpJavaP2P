@@ -10,7 +10,6 @@ import java.io.StringReader;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.concurrent.ExecutionException;
 
 public class MatchConnector extends ConnectorBase<P2PConnectionMessage> {
     private class HelloState extends ConnectorStateBase<MatchConnector>{

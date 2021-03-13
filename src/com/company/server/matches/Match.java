@@ -3,9 +3,6 @@ package com.company.server.matches;
 import com.company.network.*;
 import com.google.gson.Gson;
 import com.google.gson.stream.JsonReader;
-import events.Event;
-import events.EventArgs;
-import events.EventHandler;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -16,11 +13,9 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.Callable;
 
-public class Match {
+public class Match implements Callable<Void> {
     private abstract class MatchStateBase {
         private final Match context;
 
@@ -43,7 +38,7 @@ public class Match {
         }
     }
 
-    public class WaitClientState extends MatchStateBase {
+    private class WaitClientState extends MatchStateBase {
         private final Gson gson = new Gson();
 
         public WaitClientState(Match context) {
@@ -74,7 +69,7 @@ public class Match {
         }
     }
 
-    public class ChooseHostState extends MatchStateBase {
+    private class ChooseHostState extends MatchStateBase {
         public ChooseHostState(Match context) {
             super(context);
         }
@@ -103,7 +98,7 @@ public class Match {
         }
     }
 
-    public class ConnectClientsState extends MatchStateBase{
+    public class ConnectClientsState extends MatchStateBase {
         private final byte[] hostMessage;
         private final byte[] clientMessage;
 
@@ -140,15 +135,14 @@ public class Match {
     }
 
     private final ArrayList<EndPoints> clients = new ArrayList<>();
-    private final EventHandler<EventArgs> ended = new EventHandler<>();
     private EndPoints host;
 
     private final int playersCount;
+    private final long time;
     private int port;
 
     private MatchStateBase state;
     private DatagramSocket socket;
-    private Future<Void> matchFuture;
 
     private long endTime;
     private boolean isRun;
@@ -161,7 +155,7 @@ public class Match {
         return host;
     }
 
-    public void setHost(EndPoints endPoints){
+    protected void setHost(EndPoints endPoints){
         clients.remove(endPoints);
         host = endPoints;
     }
@@ -177,7 +171,7 @@ public class Match {
     }
 
     public int getPort(){
-        return port;
+        return socket != null ? socket.getLocalPort() : port;
     }
 
     public int getPlayersCount(){
@@ -188,49 +182,26 @@ public class Match {
         this.state = state;
     }
 
-    public void addEnded(Event<EventArgs> methodReference){
-        ended.subscribe(methodReference);
+    public Match(int playersCount, long time){
+        this(playersCount, time, 0);
     }
 
-    public void removeEnded(Event<EventArgs> methodReference){
-        ended.unSubscribe(methodReference);
-    }
-
-    public Match(int playersCount){
+    public Match(int playersCount, long time, int port){
         this.playersCount = playersCount;
+        this.time = time;
+        this.port = port;
     }
 
-    public void start(long time) throws MatchException {
-        start(0, time);
+    @Override
+    public Void call() throws MatchException {
+        tryCreateSocket();
+        startMatch();
+        return null;
     }
 
-    public void start(int port, long time) throws MatchException {
-        try {
-            socket = new DatagramSocket(port);
-        } catch (SocketException e) {
-            throw new MatchException("Не удалось создать сокет.", e);
-        }
-
-        this.port = socket.getLocalPort();
-        state = new WaitClientState(this);
-        isRun = true;
-        var executor = Executors.newSingleThreadExecutor();
-        endTime = System.currentTimeMillis() + time;
-        matchFuture = executor.submit(() -> {
-            matchLoop();
-            return null;
-        });
-    }
-
-    public void stop() throws MatchException {
+    public void cancel(){
         isRun = false;
         socket.close();
-
-        try {
-            matchFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new MatchException("Не удалось корректно завершить задачу.", e);
-        }
     }
 
     protected void sendMessage(InetAddress address, int port, byte[] message) throws MatchException {
@@ -242,8 +213,23 @@ public class Match {
         }
     }
 
+    private void startMatch() throws MatchException {
+        state = new WaitClientState(this);
+        isRun = true;
+        endTime = System.currentTimeMillis() + time;
+        matchLoop();
+    }
+
     protected void addClient(EndPoints endPoints){
         clients.add(endPoints);
+    }
+
+    private void tryCreateSocket() throws MatchException {
+        try {
+            socket = new DatagramSocket(port);
+        } catch (SocketException e) {
+            throw new MatchException("Не удалось создать сокет.", e);
+        }
     }
 
     private void matchLoop() throws MatchException {
@@ -253,7 +239,6 @@ public class Match {
 
         isRun = false;
         socket.close();
-        ended.invoke(this, new EventArgs());
     }
 
     private void matchFrame() throws MatchException {

@@ -10,6 +10,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -20,11 +23,13 @@ public class MatchmakerConnectorTests {
     private static Matchmaker matchmaker;
     private static MatchmakerConnector connector1;
     private static MatchmakerConnector connector2;
+    private static Future<?> future;
 
     @BeforeAll
     public static void setUp() throws SocketException, MatchmakerException {
-        matchmaker = new Matchmaker(2);
-        matchmaker.start();
+        matchmaker = new Matchmaker(2, 54321);
+        var executor = Executors.newSingleThreadExecutor();
+        future = executor.submit(matchmaker);
         client1 = new DatagramSocket();
         client2 = new DatagramSocket();
         connector1 = new MatchmakerConnector();
@@ -32,10 +37,11 @@ public class MatchmakerConnectorTests {
     }
 
     @AfterAll
-    public static void finish() throws ConnectorException, MatchmakerException {
+    public static void finish() throws ConnectorException, ExecutionException, InterruptedException {
         connector1.stop();
         connector2.stop();
-        matchmaker.stop();
+        matchmaker.cancel();
+        future.get();
         client1.close();
         client2.close();
     }

@@ -1,7 +1,7 @@
 package client.models.implementations;
 
 import client.ConnectionResult;
-import client.models.interfaces.MessangerModel;
+import client.models.interfaces.MessengerModel;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.company.network.Role;
@@ -9,16 +9,52 @@ import events.Event;
 import events.EventArgs;
 import events.EventHandler;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.List;
 import java.util.concurrent.Executors;
 
-public class TestMessangerModel implements MessangerModel {
-    private final EventHandler<EventArgs> received = new EventHandler<>();
+public class TestMessengerModel implements MessengerModel {
+    private class MessengerTask extends SwingWorker<Void, String>{
+        private final DatagramSocket socket;
+        private final TestMessengerModel model;
+
+        public MessengerTask(DatagramSocket socket, TestMessengerModel model){
+            this.socket = socket;
+            this.model = model;
+        }
+
+        @Override
+        protected Void doInBackground() throws Exception {
+            while (true){
+                var buffer = new byte[512];
+                var packet = new DatagramPacket(buffer, buffer.length);
+                socket.receive(packet);
+                lastMessage = MessageHelper.toString(packet.getData());
+                publish(lastMessage);
+            }
+        }
+
+        @Override
+        protected void process(List<String> chunks){
+            for (var message : chunks){
+                model.setLastMessage(message);
+                model.received.invoke(this, new EventArgs());
+            }
+        }
+    }
+
+    protected final EventHandler<EventArgs> received = new EventHandler<>();
+    private MessengerTask messengerTask;
     private DatagramSocket socket;
     private ConnectionResult result;
     private String lastMessage;
+
+    protected void setLastMessage(String lastMessage){
+        this.lastMessage = lastMessage;
+    }
 
     @Override
     public String getLastMessage(){
@@ -36,12 +72,16 @@ public class TestMessangerModel implements MessangerModel {
     }
 
     @Override
-    public void start(DatagramSocket socket, ConnectionResult result) throws IOException {
+    public void start(DatagramSocket socket, ConnectionResult result) throws Exception {
         this.socket = socket;
         this.result = result;
 
         if (result.role == Role.Client){
-            startReceiveLoop();
+            //startReceiveLoop();
+            messengerTask = new MessengerTask(socket, this);
+            messengerTask.execute();
+//            var thread = new Thread(messengerTask);
+//            thread.start();
         }
     }
 
@@ -70,6 +110,7 @@ public class TestMessangerModel implements MessangerModel {
                 socket.receive(packet);
                 lastMessage = MessageHelper.toString(packet.getData());
                 received.invoke(this, new EventArgs());
+                //SwingUtilities.invokeLater(() -> received.invoke(this, new EventArgs()));
             }
         });
     }
