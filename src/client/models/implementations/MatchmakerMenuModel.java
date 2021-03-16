@@ -2,55 +2,78 @@ package client.models.implementations;
 
 import client.Settings;
 import client.models.interfaces.MenuModel;
-import connectors.ConnectorException;
 import connectors.matchmakers.MatchmakerConnector;
 import events.Event;
 import events.EventArgs;
+import events.EventHandler;
 
 import javax.swing.*;
 import java.net.DatagramSocket;
+import java.util.concurrent.ExecutionException;
 
 public class MatchmakerMenuModel implements MenuModel {
-    private class MatchmakerConnectorTask extends SwingWorker<Void, Integer>{
-       // private final MatchmakerConnector connector = new MatchmakerConnector();
-        private final DatagramSocket socket;
+    private class MatchmakerConnectorTask extends SwingWorker<Integer, Void>{
+        private final MatchmakerConnector connector;
+        private final EventHandler<EventArgs> done = new EventHandler<>();
+
+        public void addDone(Event<EventArgs> methodReference){
+            done.subscribe(methodReference);
+        }
+
+        public void removeDone(Event<EventArgs> methodReference){
+            done.unSubscribe(methodReference);
+        }
 
         public MatchmakerConnectorTask(DatagramSocket socket){
-            this.socket = socket;
+            this.connector = new MatchmakerConnector(socket, Settings.serverAddress, Settings.serverPort);
         }
 
         @Override
-        protected Void doInBackground() throws Exception {
-            //connector.start(socket, Settings.serverAddress, Settings.serverPort);
-            return null;
+        protected Integer doInBackground() throws Exception {
+            return connector.call();
+        }
+
+        @Override
+        protected void done() {
+            done.invoke(this, new EventArgs());
         }
     }
 
-    //private final MatchmakerConnector connector = new MatchmakerConnector();
+    private MatchmakerConnectorTask connectorTask;
 
     @Override
-    public int getMatchPort() throws ConnectorException {
-        //return connector.getResult();
-        return 0;
+    public int getMatchPort() throws ExecutionException, InterruptedException {
+        return connectorTask.get();
     }
+
+    private final EventHandler<EventArgs> connected = new EventHandler<>();
 
     @Override
     public void addConnected(Event<EventArgs> methodReference) {
-        //connector.addConnected(methodReference);
+        connected.subscribe(methodReference);
     }
 
     @Override
     public void removeConnected(Event<EventArgs> methodReference) {
-        //connector.removeConnected(methodReference);
+        connected.unSubscribe(methodReference);
     }
 
     @Override
-    public void startSearch(DatagramSocket client) throws ConnectorException {
-        //connector.start(client, Settings.serverAddress, Settings.serverPort);
+    public void startSearch(DatagramSocket client) {
+        connectorTask = new MatchmakerConnectorTask(client);
+        connectorTask.addDone(this::onDone);
+        connectorTask.execute();
     }
 
     @Override
-    public void stopSearch() throws ConnectorException {
-        //connector.stop();
+    public void stopSearch() {
+        connectorTask.cancel(true);
+        connectorTask.removeDone(this::onDone);
+        connectorTask = null;
+    }
+
+    private void onDone(Object sender, EventArgs e){
+        connectorTask.removeDone(this::onDone);
+        connected.invoke(this, new EventArgs());
     }
 }

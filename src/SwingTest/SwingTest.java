@@ -6,6 +6,9 @@ import events.EventHandler;
 
 import javax.swing.*;
 import java.awt.GridLayout;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +28,7 @@ class View extends JFrame{
 }
 
 class Model{
-    class PrimeNumbersTask extends SwingWorker<List<Integer>, Integer> {
-        private final int numbersToFind = 10;
+    class PrimeNumbersTask extends SwingWorker<Void, String> {
         private final Model model;
 
         PrimeNumbersTask(Model model) {
@@ -34,44 +36,32 @@ class Model{
         }
 
         @Override
-        public List<Integer> doInBackground() {
-            final List<Integer> result = new ArrayList<>();
-            boolean interrupted = false;
-            for (int i = 0; !interrupted && (i < numbersToFind); i += 2) {
-                interrupted = doIntenseComputing();
-                result.add(i);
-                publish(i); // sends data to process function
-            }
-            return result;
-        }
+        public Void doInBackground() throws IOException {
+            var reader = new BufferedReader(new InputStreamReader(System.in));
 
-        private boolean doIntenseComputing() {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                return true;
+            while (true){
+                publish(reader.readLine());
             }
-            return false;
         }
 
         @Override
-        protected void process(List<Integer> chunks) {
-            for (int number : chunks) {
-                model.setCurrentNumber(number);
+        protected void process(List<String> chunks) {
+            for (var s : chunks) {
+                model.setCurrentString(s);
                 model.received.invoke(model, new EventArgs());
             }
         }
     }
 
     private final EventHandler<EventArgs> received = new EventHandler<>();
-    private int currentNumber;
+    private String currentString;
 
-    protected void setCurrentNumber(int number){
-        currentNumber = number;
+    protected void setCurrentString(String number){
+        currentString = number;
     }
 
-    public int getCurrentNumber(){
-        return currentNumber;
+    public String getCurrentString(){
+        return currentString;
     }
 
     public void addReceived(Event<EventArgs> methodReference){
@@ -96,7 +86,7 @@ class Presenter{
     }
 
     private void onReceived(Object sender, EventArgs e){
-        view.append(Integer.toString(model.getCurrentNumber()));
+        view.append(model.getCurrentString());
     }
 }
 

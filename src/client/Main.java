@@ -11,13 +11,12 @@ import client.services.implementations.SwingMessageBoxSerivice;
 import client.views.implementations.Loading;
 import client.views.implementations.MainFrame;
 import client.views.implementations.Menu;
-import client.views.implementations.Messanger;
+import client.views.implementations.Messenger;
 
 import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        //new MainFrame();
         initialize();
     }
 
@@ -33,7 +32,7 @@ public class Main {
             var loadModel = new HolePunchingModel();
             var loadPresenter = new HolePunchingPresenter(loadView, loadModel);
 
-            var messangerView = new Messanger();
+            var messangerView = new Messenger();
             var messangerModel = new TestMessengerModel();
             var messangerPresenter = new TestMessangerPresenter(messangerView, messangerModel, messageBoxSerivce);
 

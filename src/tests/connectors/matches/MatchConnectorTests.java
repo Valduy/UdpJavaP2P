@@ -24,7 +24,7 @@ public class MatchConnectorTests {
     private static MatchConnector connector2;
 
     @BeforeAll
-    public static void setUp() throws SocketException, ConnectorException {
+    public static void setUp() throws SocketException, ConnectorException, MatchException {
         match = new Match(2, 30 * 1000);
         var executor = Executors.newSingleThreadExecutor();
         future = executor.submit(match);
@@ -35,7 +35,7 @@ public class MatchConnectorTests {
     }
 
     @AfterAll
-    public static void finish() throws ConnectorException, ExecutionException, InterruptedException {
+    public static void finish() throws ExecutionException, InterruptedException {
         match.cancel();
         future.get();
         client1.close();

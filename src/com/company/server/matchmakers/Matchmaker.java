@@ -203,24 +203,28 @@ public class Matchmaker implements Callable<Void> {
     }
 
     private void tryCreateMatch(){
-        if (queue.size() >= playersPerMatch){
-            System.out.println("Создание матча...");
-            var players = new ArrayList<EndPoint>();
+        try {
+            if (queue.size() >= playersPerMatch){
+                System.out.println("Создание матча...");
+                var match = new Match(playersPerMatch, 30 * 1000);
+                var players = new ArrayList<EndPoint>();
 
-            for (int i = 0; i < playersPerMatch; i++){
-                players.add(queue.remove(0));
+                for (int i = 0; i < playersPerMatch; i++){
+                    players.add(queue.remove(0));
+                }
+
+                var executor = Executors.newSingleThreadExecutor();
+                var future = executor.submit(match);
+                matches.put(match, future);
+
+                for (var player : players){
+                    playerToMatch.put(player, match);
+                }
+
+                System.out.println("Матч создан!");
             }
-
-            var match = new Match(playersPerMatch, 30 * 1000);
-            var executor = Executors.newSingleThreadExecutor();
-            var future = executor.submit(match);
-            matches.put(match, future);
-
-            for (var player : players){
-                playerToMatch.put(player, match);
-            }
-
-            System.out.println("Матч создан!");
+        } catch (MatchException e) {
+            System.out.print("Не удалось создать матч.");
         }
     }
 

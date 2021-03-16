@@ -16,9 +16,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class HolePuncherTests {
     private static Match match;
@@ -33,7 +30,7 @@ public class HolePuncherTests {
     private static P2PConnectionMessage result2;
 
     @BeforeAll
-    public static void setUp() throws SocketException, ConnectorException {
+    public static void setUp() throws SocketException, ConnectorException, MatchException {
         match = new Match(2, 30 * 1000);
         var executor = Executors.newSingleThreadExecutor();
         future = executor.submit(match);
@@ -41,16 +38,12 @@ public class HolePuncherTests {
         client2 = new DatagramSocket();
         connector1 = new MatchConnector(client1, InetAddress.getLoopbackAddress(), match.getPort());
         connector2 = new MatchConnector(client2, InetAddress.getLoopbackAddress(), match.getPort());
-        puncher1 = new HolePuncher();
-        puncher2 = new HolePuncher();
     }
 
     @AfterAll
-    public static void finish() throws ConnectorException, ExecutionException, InterruptedException {
+    public static void finish() throws ExecutionException, InterruptedException {
         match.cancel();
         future.get();
-        puncher1.stop();
-        puncher2.stop();
         client1.close();
         client2.close();
     }
@@ -59,28 +52,20 @@ public class HolePuncherTests {
     @Order(1)
     public void testHolePunching() throws ExecutionException, InterruptedException {
         connectViaMatch();
-        var invocations = new Boolean[] {false, false};
-        puncher1.addPunched((o, e) -> invocations[0] = true);
-        puncher2.addPunched((o, e) -> invocations[1] = true);
-        puncher1.start(client1, result1);
-        puncher2.start(client2, result2);
-        while (!Arrays.stream(invocations).allMatch(i -> i)) Thread.onSpinWait();
-    }
-
-    @Test
-    @Order(2)
-    public void failureTest() throws ConnectorException {
-        puncher1.addPunched((o, e) -> assertThrows(ConnectorException.class, () -> puncher1.getClients()));
-        puncher1.start(client1, connector1.call());
+        var puncher1 = new HolePuncher(client1, result1);
+        var puncher2 = new HolePuncher(client2, result2);
+        var executor = Executors.newFixedThreadPool(2);
+        var future1 = executor.submit(puncher1);
+        var future2 = executor.submit(puncher2);
+        future1.get();
+        future2.get();
     }
 
     private static void connectViaMatch() throws ExecutionException, InterruptedException {
-        var invocations = new Boolean[] {false, false};
         var executor = Executors.newFixedThreadPool(2);
         var future1 = executor.submit(connector1);
         var future2 = executor.submit(connector2);
         result1 = future1.get();
         result2 = future2.get();
-        while (!Arrays.stream(invocations).allMatch(i -> i)) Thread.onSpinWait();
     }
 }

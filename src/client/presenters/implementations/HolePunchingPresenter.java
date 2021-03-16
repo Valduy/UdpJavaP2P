@@ -22,7 +22,7 @@ public class HolePunchingPresenter implements LoadPresenter {
     }
 
     @Override
-    public ConnectionResult getConnectionMessage() throws ConnectorException {
+    public ConnectionResult getConnectionMessage() throws Exception {
         return loadModel.getConnectionMessage();
     }
 
@@ -42,7 +42,7 @@ public class HolePunchingPresenter implements LoadPresenter {
     }
 
     @Override
-    public void connect(DatagramSocket socket, int port) throws ConnectorException {
+    public void connect(DatagramSocket socket, int port) throws Exception {
         loadModel.startConnection(socket, Settings.serverAddress, port);
     }
 }

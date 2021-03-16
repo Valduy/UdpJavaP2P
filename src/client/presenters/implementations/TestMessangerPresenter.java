@@ -5,13 +5,13 @@ import client.models.interfaces.MessengerModel;
 import client.presenters.interfaces.MessengerPresenter;
 import client.services.interfaces.MessageBoxService;
 import client.views.interfaces.ChildView;
-import client.views.interfaces.MessangerView;
+import client.views.interfaces.MessengerView;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
 
 public class TestMessangerPresenter implements MessengerPresenter {
-    private final MessangerView view;
+    private final MessengerView view;
     private final MessengerModel model;
     private final MessageBoxService messageBoxService;
 
@@ -21,7 +21,7 @@ public class TestMessangerPresenter implements MessengerPresenter {
     }
 
     public TestMessangerPresenter(
-            MessangerView view,
+            MessengerView view,
             MessengerModel model,
             MessageBoxService messageBoxService)
     {

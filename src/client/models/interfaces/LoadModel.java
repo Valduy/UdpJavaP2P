@@ -9,8 +9,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public interface LoadModel{
-    ConnectionResult getConnectionMessage() throws ConnectorException;
+    ConnectionResult getConnectionMessage() throws Exception;
     void addConnected(Event<EventArgs> methodReference);
     void removeConnected(Event<EventArgs> methodReference);
-    void startConnection(DatagramSocket socket, InetAddress address, int port) throws ConnectorException;
+    void startConnection(DatagramSocket socket, InetAddress address, int port) throws Exception;
 }

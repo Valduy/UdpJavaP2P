@@ -12,6 +12,7 @@ import events.EventHandler;
 
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.concurrent.ExecutionException;
 
 public class MatchmakerMenuPresenter implements MenuPresenter {
     private final MenuView view;
@@ -30,7 +31,7 @@ public class MatchmakerMenuPresenter implements MenuPresenter {
         return socket;
     }
 
-    public int getMatchPort() throws ConnectorException {
+    public int getMatchPort() throws Exception {
         return model.getMatchPort();
     }
 

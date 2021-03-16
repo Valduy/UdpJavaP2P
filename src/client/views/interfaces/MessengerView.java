@@ -6,7 +6,7 @@ import events.EventArgs;
 
 import java.net.DatagramSocket;
 
-public interface MessangerView extends ChildView{
+public interface MessengerView extends ChildView{
     String getLastMessage();
     void addMessaged(Event<EventArgs> methodReference);
     void removeMessaged(Event<EventArgs> methodReference);

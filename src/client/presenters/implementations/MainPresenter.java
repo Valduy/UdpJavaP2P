@@ -5,7 +5,6 @@ import client.presenters.interfaces.MenuPresenter;
 import client.presenters.interfaces.MessengerPresenter;
 import client.services.interfaces.MessageBoxService;
 import client.views.interfaces.MainView;
-import connectors.ConnectorException;
 import events.EventArgs;
 
 public class MainPresenter {
@@ -13,7 +12,7 @@ public class MainPresenter {
     private final MenuPresenter menuPresenter;
     private final LoadPresenter loadPresenter;
     //private final FieldPresenter fieldPresenter;
-    private final MessengerPresenter messangerPresenter;
+    private final MessengerPresenter messengerPresenter;
     private final MessageBoxService messageBoxService;
 
     public MainPresenter(
@@ -28,7 +27,7 @@ public class MainPresenter {
         this.menuPresenter = menuPresenter;
         this.loadPresenter = loadPresenter;
         //this.fieldPresenter = fieldPresenter;
-        this.messangerPresenter = messangerPresenter;
+        this.messengerPresenter = messangerPresenter;
         this.messageBoxService = messageBoxService;
         view.setComponent(menuPresenter.getView().toComponent());
 
@@ -40,16 +39,16 @@ public class MainPresenter {
         try {
             loadPresenter.connect(menuPresenter.getSocket(), menuPresenter.getMatchPort());
             view.setComponent(loadPresenter.getView().toComponent());
-        } catch (ConnectorException connectorException) {
+        } catch (Exception ex) {
             view.setComponent(menuPresenter.getView().toComponent());
-            messageBoxService.showMessageDialog(connectorException.getMessage());
+            messageBoxService.showMessageDialog(ex.getMessage());
         }
     }
 
     private void onConnected(Object sender, EventArgs e){
         try {
-            messangerPresenter.start(menuPresenter.getSocket(), loadPresenter.getConnectionMessage());
-            view.setComponent(messangerPresenter.getView().toComponent());
+            messengerPresenter.start(menuPresenter.getSocket(), loadPresenter.getConnectionMessage());
+            view.setComponent(messengerPresenter.getView().toComponent());
         } catch (Exception ex) {
             messageBoxService.showMessageDialog(ex.getMessage());
         }

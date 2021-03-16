@@ -37,19 +37,24 @@ public class MatchmakerConnectorTests {
     }
 
     @AfterAll
-    public static void finish() throws ConnectorException, ExecutionException, InterruptedException {
+    public static void finish() throws ExecutionException, InterruptedException {
         matchmaker.cancel();
         future.get();
         client1.close();
         client2.close();
     }
 
+    static int r1;
+    static int r2;
+
     @Test
     @Order(1)
-    public void Test() throws ExecutionException, InterruptedException {
+    public void testConnection() throws ExecutionException, InterruptedException {
         var executor = Executors.newFixedThreadPool(2);
         var future1 = executor.submit(connector1);
         var future2 = executor.submit(connector2);
-        assertEquals(future1.get(), future2.get());
+        var result1 = future1.get();
+        var result2 = future2.get();
+        assertEquals(result1, result2);
     }
 }

@@ -1,6 +1,6 @@
 package client.views.implementations;
 
-import client.views.interfaces.MessangerView;
+import client.views.interfaces.MessengerView;
 import events.Event;
 import events.EventArgs;
 import events.EventHandler;
@@ -8,10 +8,10 @@ import events.EventHandler;
 import javax.swing.*;
 import java.awt.*;
 
-public class Messanger extends JComponent implements MessangerView {
+public class Messenger extends JComponent implements MessengerView {
     private final EventHandler<EventArgs> messaged = new EventHandler<>();
     private final JTextArea textArea = new JTextArea();
-    private final JPanel messangerPanel = new JPanel();
+    private final JPanel messengerPanel = new JPanel();
     private final TextField textField = new TextField();
     private final Button button = new Button();
 
@@ -32,20 +32,20 @@ public class Messanger extends JComponent implements MessangerView {
         messaged.unSubscribe(methodReference);
     }
 
-    public Messanger(){
+    public Messenger(){
         setLayout(new BorderLayout());
         textArea.setVisible(true);
         add(textArea, BorderLayout.CENTER);
 
         var grid = new GridLayout(1, 2);
-        messangerPanel.setLayout(grid);
-        add(messangerPanel, BorderLayout.SOUTH);
+        messengerPanel.setLayout(grid);
+        add(messengerPanel, BorderLayout.SOUTH);
 
         textField.setVisible(true);
-        messangerPanel.add(textField);
+        messengerPanel.add(textField);
 
         button.setVisible(true);
-        messangerPanel.add(button);
+        messengerPanel.add(button);
         button.addActionListener((e) ->{
             lastMessage = textField.getText();
             textField.setText("");

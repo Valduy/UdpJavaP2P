@@ -10,11 +10,12 @@ import events.EventArgs;
 import events.EventHandler;
 
 import javax.swing.*;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.List;
-import java.util.concurrent.Executors;
 
 public class TestMessengerModel implements MessengerModel {
     private class MessengerTask extends SwingWorker<Void, String>{
@@ -32,7 +33,7 @@ public class TestMessengerModel implements MessengerModel {
                 var buffer = new byte[512];
                 var packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
-                lastMessage = MessageHelper.toString(packet.getData());
+                lastMessage = MessageHelper.toString(packet.getData()).trim();
                 publish(lastMessage);
             }
         }
@@ -77,11 +78,8 @@ public class TestMessengerModel implements MessengerModel {
         this.result = result;
 
         if (result.role == Role.Client){
-            //startReceiveLoop();
             messengerTask = new MessengerTask(socket, this);
             messengerTask.execute();
-//            var thread = new Thread(messengerTask);
-//            thread.start();
         }
     }
 
@@ -95,23 +93,9 @@ public class TestMessengerModel implements MessengerModel {
     public void send(String data) throws IOException {
         var message = MessageHelper.getMessage(NetworkMessages.INFO, data);
 
-        for (var clinet : result.clients){
-            var packet = new DatagramPacket(message, message.length, clinet.address, clinet.port);
+        for (var client : result.clients){
+            var packet = new DatagramPacket(message, message.length, client.address, client.port);
             socket.send(packet);
         }
-    }
-
-    private void startReceiveLoop(){
-        var executor = Executors.newSingleThreadExecutor();
-        executor.submit(() ->{
-            while (true){
-                var buffer = new byte[512];
-                var packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
-                lastMessage = MessageHelper.toString(packet.getData());
-                received.invoke(this, new EventArgs());
-                //SwingUtilities.invokeLater(() -> received.invoke(this, new EventArgs()));
-            }
-        });
     }
 }

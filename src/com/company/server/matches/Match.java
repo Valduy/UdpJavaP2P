@@ -139,7 +139,6 @@ public class Match implements Callable<Void> {
 
     private final int playersCount;
     private final long time;
-    private int port;
 
     private MatchStateBase state;
     private DatagramSocket socket;
@@ -171,7 +170,7 @@ public class Match implements Callable<Void> {
     }
 
     public int getPort(){
-        return socket != null ? socket.getLocalPort() : port;
+        return socket.getLocalPort();
     }
 
     public int getPlayersCount(){
@@ -182,19 +181,18 @@ public class Match implements Callable<Void> {
         this.state = state;
     }
 
-    public Match(int playersCount, long time){
+    public Match(int playersCount, long time) throws MatchException {
         this(playersCount, time, 0);
     }
 
-    public Match(int playersCount, long time, int port){
+    public Match(int playersCount, long time, int port) throws MatchException {
         this.playersCount = playersCount;
         this.time = time;
-        this.port = port;
+        tryCreateSocket(port);
     }
 
     @Override
     public Void call() throws MatchException {
-        tryCreateSocket();
         startMatch();
         return null;
     }
@@ -209,7 +207,9 @@ public class Match implements Callable<Void> {
             var packet = new DatagramPacket(message, message.length, address, port);
             socket.send(packet);
         } catch (IOException e) {
-            throw new MatchException("Не удалось отправить пакет.", e);
+            if (!socket.isClosed()) {
+                throw new MatchException("Не удалось отправить пакет.", e);
+            }
         }
     }
 
@@ -224,7 +224,7 @@ public class Match implements Callable<Void> {
         clients.add(endPoints);
     }
 
-    private void tryCreateSocket() throws MatchException {
+    private void tryCreateSocket(int port) throws MatchException {
         try {
             socket = new DatagramSocket(port);
         } catch (SocketException e) {

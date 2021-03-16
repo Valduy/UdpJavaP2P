@@ -63,10 +63,6 @@ public abstract class ConnectorBase<TResult> implements Callable<TResult> {
 
     private final EventHandler<EventArgs> connected = new EventHandler<>();
 
-    public ConnectorBase(){
-        allowedFailuresCount = 10;
-    }
-
     protected void setResult(TResult result){
         this.result = result;
     }
@@ -75,15 +71,18 @@ public abstract class ConnectorBase<TResult> implements Callable<TResult> {
         this.client = client;
         this.serverAddress = address;
         this.serverPort = port;
+        allowedFailuresCount = 10;
     }
 
     @Override
     public TResult call() throws ConnectorException {
         state = initStartState();
         setSocketTimeout();
-        connectionLoop();
-        failureCount = 0;
         isRun = true;
+        connectionLoop();
+        isRun = false;
+        failureCount = 0;
+        resetSocketTimeout();
         return result;
     }
 
@@ -99,7 +98,9 @@ public abstract class ConnectorBase<TResult> implements Callable<TResult> {
             var packet = new DatagramPacket(message, message.length, serverAddress, serverPort);
             client.send(packet);
         } catch (IOException e) {
-            throw new ConnectorException("Не удалось отправить пакет.", e);
+            if (!client.isClosed()) {
+                throw new ConnectorException("Не удалось отправить пакет.", e);
+            }
         }
     }
 
@@ -133,13 +134,14 @@ public abstract class ConnectorBase<TResult> implements Callable<TResult> {
         state.send();
 
         try {
+            Thread.sleep(1000);
             var buffer = new byte[512];
             var packet = new DatagramPacket(buffer, buffer.length);
             client.receive(packet);
             failureCount = 0;
             state.processMessage(packet.getData());
-        } catch (IOException e) {
-            if (e.getCause() instanceof SocketTimeoutException) {
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof SocketTimeoutException) {
                 failureCount++;
             } else{
                 throw new ConnectorException("Произошла ошибка при попытке принять пакет", e);
