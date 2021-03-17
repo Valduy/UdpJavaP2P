@@ -4,8 +4,18 @@ import game.GameObject;
 import pong.Point;
 
 public class Arbiter extends GameObject {
+    private enum Direction{
+        Left,
+        Right,
+    }
+
+    private final long timeToRestart = 2000;
+
     private Field field;
-    private Ball ball;
+    private HostBall ball;
+    private Direction direction;
+    private boolean isRestarted;
+    private long restartTime;
     private int leftScore;
     private int rightScore;
 
@@ -20,8 +30,8 @@ public class Arbiter extends GameObject {
     @Override
     public void start() {
         super.start();
-        ball = (Ball) getGameWorld().getGameObjects().stream()
-                .filter(go -> go instanceof Ball)
+        ball = (HostBall) getGameWorld().getGameObjects().stream()
+                .filter(go -> go instanceof HostBall)
                 .findFirst()
                 .get();
 
@@ -29,12 +39,20 @@ public class Arbiter extends GameObject {
                 .filter(go -> go instanceof Field)
                 .findFirst()
                 .get();
+
+        isRestarted = true;
+        restartTime = System.currentTimeMillis() + timeToRestart;
     }
 
     @Override
     public void update(long dt) {
         super.update(dt);
         checkGoals();
+        restart();
+    }
+
+    public void reset(){
+        leftScore = rightScore = 0;
     }
 
     private void checkGoals(){
@@ -44,18 +62,38 @@ public class Arbiter extends GameObject {
 
         if (currentPosition.getX() >= field.getWidth()){
             leftScore++;
-            resetBall();
-            // TODO: засчитать гол левому и рестартовать
+            direction = Direction.Right;
+            startRestart();
         }
         else if (currentPosition.getX() <= -ballAABB.getWidth()){
             rightScore++;
-            resetBall();
-            // TODO: засчитать гол правому и рестартовать
+            direction = Direction.Left;
+            startRestart();
         }
     }
 
     private void restart(){
+        if (!isRestarted){
+            if (restartTime <= System.currentTimeMillis()){
+                isRestarted = true;
+                var physics = ball.getPhysics();
 
+                switch (direction){
+                    case Left:
+                        physics.setVelocity(new Point(-ball.getSpeedMagnitude(), 0));
+                        break;
+                    case Right:
+                        physics.setVelocity(new Point(ball.getSpeedMagnitude(), 0));
+                        break;
+                }
+            }
+        }
+    }
+
+    private void startRestart(){
+        resetBall();
+        isRestarted = false;
+        restartTime = System.currentTimeMillis() + timeToRestart;
     }
 
     private void resetBall(){

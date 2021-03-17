@@ -1,27 +1,19 @@
 package pong.host;
 
-import game.GameObject;
-import pong.*;
+import pong.Point;
+import pong.base.RacketBase;
+import pong.components.InputComponent;
+import pong.components.PhysicsComponent;
 
-public class Racket extends GameObject {
-    private final PositionComponent position = new PositionComponent();
-    private final AABBComponent aabb = new AABBComponent();
+public class HostRacket extends RacketBase {
     private final PhysicsComponent physics = new PhysicsComponent();
     private final InputComponent inputs = new InputComponent();
     private final double velocityMagnitude = 10;
 
-    private Ball ball;
+    private HostBall ball;
 
     public double getVelocityMagnitude(){
         return velocityMagnitude;
-    }
-
-    public PositionComponent getPosition(){
-        return position;
-    }
-
-    public AABBComponent getAABB(){
-        return aabb;
     }
 
     public PhysicsComponent getPhysics(){
@@ -31,14 +23,11 @@ public class Racket extends GameObject {
     @Override
     public void start() {
         super.start();
-        addComponent(position);
-        addComponent(aabb);
         addComponent(physics);
         addComponent(inputs);
 
-
-        ball = (Ball) getGameWorld().getGameObjects().stream()
-                .filter(go -> go instanceof Ball)
+        ball = (HostBall) getGameWorld().getGameObjects().stream()
+                .filter(go -> go instanceof HostBall)
                 .findFirst()
                 .get();
     }
@@ -51,8 +40,8 @@ public class Racket extends GameObject {
     }
 
     private void processCollisions(){
-        if (aabb.isIntersect(ball.getAABB())){
-            var racketCenter = aabb.getCenter();
+        if (getAABB().isIntersect(ball.getAABB())){
+            var racketCenter = getAABB().getCenter();
             var ballCenter = ball.getAABB().getCenter();
             var direction = ballCenter.sub(racketCenter);
             var newVelocity = direction.mul(ball.getSpeedMagnitude());

@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class Field extends GameObject {
-    private Ball ball;
-    private List<Racket> rackets;
+    private HostBall ball;
+    private List<HostRacket> rackets;
     private double width;
     private double height;
 
@@ -30,14 +30,14 @@ public class Field extends GameObject {
     @Override
     public void start() {
         super.start();
-        ball = (Ball) getGameWorld().getGameObjects().stream()
-                .filter(go -> go instanceof Ball)
+        ball = (HostBall) getGameWorld().getGameObjects().stream()
+                .filter(go -> go instanceof HostBall)
                 .findFirst()
                 .get();
 
         rackets = getGameWorld().getGameObjects().stream()
-                .filter(go -> go instanceof Racket)
-                .map(go -> (Racket) go)
+                .filter(go -> go instanceof HostRacket)
+                .map(go -> (HostRacket) go)
                 .collect(Collectors.toList());
     }
 

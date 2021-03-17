@@ -21,7 +21,7 @@ public class Point {
     }
 
     public Point(){
-
+        x = y = 0;
     }
 
     public Point(double x, double y){

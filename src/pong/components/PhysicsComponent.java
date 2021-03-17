@@ -1,7 +1,8 @@
-package pong;
+package pong.components;
 
 import game.Component;
 import game.GameObject;
+import pong.Point;
 
 public class PhysicsComponent extends Component {
     private Point velocity;

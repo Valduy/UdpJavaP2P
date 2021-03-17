@@ -1,4 +1,4 @@
-package pong;
+package pong.components;
 
 import game.Component;
 

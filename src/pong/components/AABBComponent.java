@@ -1,6 +1,7 @@
-package pong;
+package pong.components;
 
 import game.Component;
+import pong.Point;
 
 public class AABBComponent extends Component {
     private Point min = new Point();
@@ -47,8 +48,16 @@ public class AABBComponent extends Component {
     }
 
     public boolean isIntersect(AABBComponent other){
-        if (this.getMax().getX() < other.getMin().getX() || this.getMin().getX() > other.getMax().getX()) return false;
-        if (this.getMax().getY() < other.getMin().getY() || this.getMin().getY() > other.getMax().getY()) return false;
+        var thisPosition = ((PositionComponent) getContext().getComponent(PositionComponent.class)).getPosition();
+        var thisMin = thisPosition.add(min);
+        var thisMax = thisPosition.add(max);
+
+        var otherPosition = ((PositionComponent) other.getContext().getComponent(PositionComponent.class)).getPosition();
+        var otherMin = otherPosition.add(other.getMin());
+        var otherMax = otherPosition.add(other.getMax());
+
+        if (thisMax.getX() < otherMin.getX() || thisMin.getX() > otherMax.getX()) return false;
+        if (thisMax.getY() < otherMin.getY() || thisMin.getY() > otherMax.getY()) return false;
         return true;
     }
 }

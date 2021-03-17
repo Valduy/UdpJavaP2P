@@ -1,6 +1,7 @@
-package pong;
+package pong.components;
 
 import game.Component;
+import pong.Point;
 
 public class PositionComponent extends Component {
     private Point position;
