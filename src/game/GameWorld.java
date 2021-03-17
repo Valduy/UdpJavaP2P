@@ -29,7 +29,7 @@ public class GameWorld {
     
     public void update(long dt){
         for (var go : gameObjects){
-            go.Update(dt);
+            go.update(dt);
         }
     }
 }

@@ -27,6 +27,10 @@ public abstract class GameObject {
         return components.get(clazz);
     }
 
+    public boolean containsComponent(Class<? extends Component> clazz) {
+        return components.containsKey(clazz);
+    }
+
     public void removeComponent(Class<Component> clazz){
         var component = components.remove(clazz);
         component.setContext(null);
@@ -36,9 +40,9 @@ public abstract class GameObject {
 
     }
 
-    public void Update(long dt){
+    public void update(long dt){
         for (var component : components.values()){
-            component.Update(dt);
+            component.update(dt);
         }
     }
 }

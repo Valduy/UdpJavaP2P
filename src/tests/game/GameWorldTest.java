@@ -23,7 +23,7 @@ public class GameWorldTest {
     private class TestGameObject extends GameObject{
 
         @Override
-        public void Update(long dt) {
+        public void update(long dt) {
             var component = (TestComponent)getComponent(TestComponent.class);
             component.setSum(component.getSum() + dt);
         }

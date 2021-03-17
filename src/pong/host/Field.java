@@ -1,0 +1,80 @@
+package pong.host;
+
+import game.GameObject;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class Field extends GameObject {
+    private Ball ball;
+    private List<Racket> rackets;
+    private double width;
+    private double height;
+
+    public double getWidth() {
+        return width;
+    }
+
+    public void setWidth(double width) {
+        this.width = width;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
+    }
+
+    @Override
+    public void start() {
+        super.start();
+        ball = (Ball) getGameWorld().getGameObjects().stream()
+                .filter(go -> go instanceof Ball)
+                .findFirst()
+                .get();
+
+        rackets = getGameWorld().getGameObjects().stream()
+                .filter(go -> go instanceof Racket)
+                .map(go -> (Racket) go)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void update(long dt) {
+        super.update(dt);
+        processBallCollisions();
+        processRacketsCollisions();
+    }
+
+    private void processBallCollisions(){
+        var ballPosition = ball.getPosition();
+        var ballPhysics = ball.getPhysics();
+        var velocity = ball.getPhysics().getVelocity();
+
+        if (ballPosition.getPosition().getY() <= 0){
+            velocity.setY(Math.max(velocity.getY(), -velocity.getY()));
+            ballPhysics.setVelocity(velocity);
+        }
+        else if (ballPosition.getPosition().getY() >= height){
+            velocity.setY(Math.min(velocity.getY(), -velocity.getY()));
+            ballPhysics.setVelocity(velocity);
+        }
+    }
+
+    private void processRacketsCollisions(){
+        for (var racket : rackets){
+            var racketAABB = racket.getAABB();
+            var racketPosition = racket.getPosition();
+            var currentPosition = racketPosition.getPosition();
+            
+            if (currentPosition.getY() <= 0){
+                currentPosition.setY(0);
+            }
+            else if (currentPosition.getY() >= height - racketAABB.getHeight()){
+                currentPosition.setY(height - racketAABB.getHeight());
+            }
+        }
+    }
+}

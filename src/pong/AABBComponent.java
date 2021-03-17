@@ -3,87 +3,43 @@ package pong;
 import game.Component;
 
 public class AABBComponent extends Component {
-    private Point position = new Point();
-    private Point size = new Point();
+    private Point min = new Point();
+    private Point max = new Point();
 
-    public Point getPosition(){
-        return position;
+    public Point getMin(){
+        return min;
     }
 
-    public void setPosition(Point position){
-        if (position == null){
+    public void setMin(Point min){
+        if (min == null){
             throw new IllegalArgumentException();
         }
 
-        this.position = position;
+        this.min = min;
+    }
+
+    public Point getMax() {
+        return max;
+    }
+
+    public void setMax(Point max) {
+        if (max == null){
+            throw new IllegalArgumentException();
+        }
+
+        this.max = max;
     }
 
     public Point getSize(){
-        return size;
+        return max.sub(min);
     }
 
-    public void setSize(Point size){
-        if (size == null){
-            throw new IllegalArgumentException();
-        }
-
-        this.size = size;
+    public double getWidth(){
+        return max.getX() - min.getX();
     }
 
-    public double getX() {
-        return position.getX();
-    }
-
-    public void setX(double x) {
-        position.setX(x);
-    }
-
-    public double getY() {
-        return position.getY();
-    }
-
-    public void setY(double y) {
-        position.setY(y);
-    }
-
-    public double getWidth() {
-        return size.getX();
-    }
-
-    public void setWidth(double width) {
-        size.setX(width);
-    }
-
-    public double getHeight() {
-        return size.getY();
-    }
-
-    public void setHeight(double height) {
-        size.setY(height);
-    }
-
-    public Point getMin(){
-        return getPosition();
-    }
-
-    public double getMinX(){
-        return getX();
-    }
-
-    public double getMinY(){
-        return getY();
-    }
-
-    public Point getMax(){
-        return new Point(getMaxX(), getMaxY());
-    }
-
-    public double getMaxX(){
-        return getX() + getWidth();
-    }
-
-    public double getMaxY(){
-        return getY() + getHeight();
+    public double getHeight(){
+        return max.getY() - min.getY();
     }
 
     public Point getCenter(){
@@ -91,8 +47,8 @@ public class AABBComponent extends Component {
     }
 
     public boolean isIntersect(AABBComponent other){
-        if (this.getMaxX() < other.getMinX() || this.getMinX() > other.getMaxX()) return false;
-        if (this.getMaxY() < other.getMinY() || this.getMinY() > other.getMaxY()) return false;
+        if (this.getMax().getX() < other.getMin().getX() || this.getMin().getX() > other.getMax().getX()) return false;
+        if (this.getMax().getY() < other.getMin().getY() || this.getMin().getY() > other.getMax().getY()) return false;
         return true;
     }
 }

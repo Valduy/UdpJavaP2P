@@ -11,7 +11,7 @@ public abstract class Component {
         this.gameObject = gameObject;
     }
 
-    public void Update(long dt){
+    public void update(long dt){
 
     }
 }
