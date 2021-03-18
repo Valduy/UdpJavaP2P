@@ -1,5 +1,7 @@
 package client.presenters.implementations;
 
+import client.views.Rectangle;
+import client.views.interfaces.GameView;
 import events.Event;
 import events.EventArgs;
 import events.EventHandler;
@@ -13,6 +15,8 @@ import pong.host.HostRacket;
 
 import javax.swing.*;
 import java.net.DatagramSocket;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class HostPongPresenter {
@@ -55,8 +59,10 @@ public class HostPongPresenter {
         }
     }
 
-    private final double width = 600;
-    private final double height = 450;
+    private final GameView view;
+
+    private final double width;
+    private final double height;
     private final double ballSize = 10;
     private final double racketHeight = ballSize * 2;
     private final double racketWidth = ballSize;
@@ -82,7 +88,10 @@ public class HostPongPresenter {
         ended.unSubscribe(methodReference);
     }
 
-    public HostPongPresenter(){
+    public HostPongPresenter(GameView view, double width, double height){
+        this.view = view;
+        this.width = width;
+        this.height = height;
         initWorld();
     }
 
@@ -120,8 +129,26 @@ public class HostPongPresenter {
     }
 
     private void onUpdated(Object sender, EventArgs e){
-        // TODO: отображение
+        view.draw(getObjects());
         // TODO: отправка
         // TODO: очередь приема
+    }
+
+    private Collection<Rectangle> getObjects(){
+        var result = new ArrayList<Rectangle>();
+
+        var leftPosition = leftRacket.getPosition().getPosition();
+        var r1 = new Rectangle(leftPosition.getX(), leftPosition.getY(), racketWidth, racketHeight);
+        result.add(r1);
+
+        var rightPosition = rightRacket.getPosition().getPosition();
+        var r2 = new Rectangle(rightPosition.getX(), rightPosition.getY(), racketWidth, racketHeight);
+        result.add(r2);
+
+        var ballPosition = ball.getPosition().getPosition();
+        var r3 = new Rectangle(ballPosition.getX(), ballPosition.getY(), ballSize, ballSize);
+        result.add(r3);
+
+        return result;
     }
 }
