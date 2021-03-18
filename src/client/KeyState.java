@@ -1,4 +1,4 @@
-package client.views;
+package client;
 
 public enum KeyState {
     Pressed,

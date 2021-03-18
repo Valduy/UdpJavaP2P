@@ -1,5 +1,6 @@
-package client.views;
+package client;
 
+import client.KeyState;
 import events.EventArgs;
 
 public class KeyEventArgs extends EventArgs {

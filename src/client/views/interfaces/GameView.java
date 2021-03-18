@@ -1,11 +1,9 @@
 package client.views.interfaces;
 
-import client.views.KeyEventArgs;
-import client.views.Rectangle;
+import client.KeyEventArgs;
+import client.shapes.Rectangle;
 import events.Event;
-import events.EventArgs;
 
-import java.awt.*;
 import java.util.Collection;
 
 public interface GameView {

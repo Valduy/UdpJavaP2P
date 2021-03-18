@@ -1,7 +1,6 @@
-package pong.host;
+package pong.gameobjects;
 
 import pong.Point;
-import pong.base.RacketBase;
 import pong.components.InputComponent;
 import pong.components.PhysicsComponent;
 
@@ -18,6 +17,10 @@ public class HostRacket extends RacketBase {
 
     public PhysicsComponent getPhysics(){
         return physics;
+    }
+
+    public InputComponent getInputs() {
+        return inputs;
     }
 
     @Override

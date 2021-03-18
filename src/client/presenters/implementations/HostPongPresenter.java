@@ -1,23 +1,38 @@
 package client.presenters.implementations;
 
-import client.views.Rectangle;
+import client.ReceiveEventArgs;
+import client.Receiver;
+import client.messages.Inputs;
+import client.messages.Position;
+import client.messages.WorldState;
+import client.shapes.Rectangle;
 import client.views.interfaces.GameView;
+import com.company.network.EndPoint;
+import com.company.network.MessageHelper;
+import com.company.network.NetworkMessages;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import events.Event;
 import events.EventArgs;
 import events.EventHandler;
 import game.GameLoop;
 import game.GameWorld;
 import pong.Point;
-import pong.host.Arbiter;
-import pong.host.Field;
-import pong.host.HostBall;
-import pong.host.HostRacket;
+import pong.gameobjects.Arbiter;
+import pong.gameobjects.Field;
+import pong.gameobjects.HostBall;
+import pong.gameobjects.HostRacket;
 
 import javax.swing.*;
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class HostPongPresenter {
     private class HostPongTask extends SwingWorker<Void, Void>{
@@ -59,6 +74,8 @@ public class HostPongPresenter {
         }
     }
 
+    private final Gson gson = new Gson();
+    private final Collection<EndPoint> clients;
     private final GameView view;
 
     private final double width;
@@ -75,8 +92,12 @@ public class HostPongPresenter {
     private final HostBall ball = new HostBall();
     private final Arbiter arbiter = new Arbiter();
 
+    private final ArrayList<Inputs> inputs = new ArrayList<>();
+
     private DatagramSocket socket;
     private HostPongTask pongTask;
+    private Receiver receiver;
+    private Future<?> receiverFuture;
 
     private final EventHandler<EventArgs> ended = new EventHandler<>();
 
@@ -88,17 +109,21 @@ public class HostPongPresenter {
         ended.unSubscribe(methodReference);
     }
 
-    public HostPongPresenter(GameView view, double width, double height){
+    public HostPongPresenter(GameView view, Collection<EndPoint> clients, double width, double height){
+        this.clients = clients;
         this.view = view;
         this.width = width;
         this.height = height;
         initWorld();
     }
 
-    public void start(DatagramSocket socket){
-        // TODO: нарулить приемопередачу через одни порт
+    public void start(DatagramSocket socket) throws IOException {
         this.socket = socket;
         resetWorld();
+        receiver = new Receiver(socket.getLocalPort(), 512);
+        receiver.addReceived(this::onReceived);
+        var executor = Executors.newSingleThreadExecutor();
+        receiverFuture = executor.submit(receiver);
         pongTask = new HostPongTask(world);
         pongTask.addUpdated(this::onUpdated);
         pongTask.execute();
@@ -129,9 +154,14 @@ public class HostPongPresenter {
     }
 
     private void onUpdated(Object sender, EventArgs e){
-        view.draw(getObjects());
-        // TODO: отправка
-        // TODO: очередь приема
+        try {
+            view.draw(getObjects());
+            sendState();
+            processInputs();
+        } catch (IOException ioException) {
+            // TODO:...
+            ioException.printStackTrace();
+        }
     }
 
     private Collection<Rectangle> getObjects(){
@@ -150,5 +180,59 @@ public class HostPongPresenter {
         result.add(r3);
 
         return result;
+    }
+
+    private void sendState() throws IOException {
+        var state = getWorldState();
+        var data = gson.toJson(state);
+        var message = MessageHelper.getMessage(NetworkMessages.INFO, data);
+
+        for (var client : clients){
+            var packet = new DatagramPacket(message, message.length, client.address, client.port);
+            socket.send(packet);
+        }
+    }
+
+    private WorldState getWorldState(){
+        var result = new WorldState();
+        result.positions = new ArrayList<>();
+
+        var leftPosition = new Position();
+        leftPosition.x = leftRacket.getPosition().getPosition().getX();
+        leftPosition.y = leftRacket.getPosition().getPosition().getY();
+        result.positions.add(leftPosition);
+
+        var rightPosition = new Position();
+        leftPosition.x = rightRacket.getPosition().getPosition().getX();
+        leftPosition.y = rightRacket.getPosition().getPosition().getY();
+        result.positions.add(rightPosition);
+
+        var ballPosition = new Position();
+        ballPosition.x = ball.getPosition().getPosition().getX();
+        ballPosition.y = ball.getPosition().getPosition().getY();
+        result.positions.add(ballPosition);
+
+        return result;
+    }
+
+    private void processInputs(){
+        // TODO: использую только последнее сообщение, что не здорово, но для примера сойдет.
+        if (!inputs.isEmpty()){
+            var input = inputs.get(inputs.size() - 1);
+            var racketInputs = rightRacket.getInputs();
+            racketInputs.setIsUp(input.isUp);
+            racketInputs.setIsDown(input.isDown);
+            inputs.clear();
+        }
+    }
+
+    private void onReceived(Object sender, ReceiveEventArgs e){
+        var data = MessageHelper.toString(e.getReceived());
+        var reader = new JsonReader(new StringReader(data));
+        Inputs message = gson.fromJson(reader, Inputs.class);
+
+        synchronized (inputs){
+            inputs.add(message);
+        }
     }
 }

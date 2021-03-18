@@ -1,4 +1,4 @@
-package client.views;
+package client.shapes;
 
 public class Rectangle {
     private double x;

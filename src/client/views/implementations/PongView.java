@@ -1,8 +1,8 @@
 package client.views.implementations;
 
-import client.views.KeyEventArgs;
-import client.views.KeyState;
-import client.views.Rectangle;
+import client.KeyEventArgs;
+import client.KeyState;
+import client.shapes.Rectangle;
 import client.views.interfaces.GameView;
 import events.Event;
 import events.EventHandler;

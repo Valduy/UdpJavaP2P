@@ -1,4 +1,4 @@
-package pong.host;
+package pong.gameobjects;
 
 import game.GameObject;
 

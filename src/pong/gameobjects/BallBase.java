@@ -1,4 +1,4 @@
-package pong.base;
+package pong.gameobjects;
 
 import game.GameObject;
 import pong.components.AABBComponent;

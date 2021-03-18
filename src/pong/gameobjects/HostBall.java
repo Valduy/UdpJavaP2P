@@ -1,6 +1,5 @@
-package pong.host;
+package pong.gameobjects;
 
-import pong.base.BallBase;
 import pong.components.PhysicsComponent;
 
 public class HostBall extends BallBase {
