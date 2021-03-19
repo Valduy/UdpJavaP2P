@@ -86,7 +86,7 @@ public class HolePuncher implements Callable<ArrayList<EndPoint>> {
 
         } catch (IOException e) {
             if (e instanceof SocketTimeoutException) {
-                System.out.print("Кажется, никто нам не пишет(((.");
+                System.out.println("Кажется, никто нам не пишет(((.");
                 failureCount++;
             } else{
                 throw new ConnectorException("Произошла ошибка при попытке принять пакет.", e);
@@ -151,7 +151,7 @@ public class HolePuncher implements Callable<ArrayList<EndPoint>> {
             }
 
             if (potentials.size() == 0 && requesters.size() == 0){
-                System.out.print("Удалось соединиться со всеми клиентами!");
+                System.out.println("Удалось соединиться со всеми клиентами!");
                 result = new ArrayList<>(confirmed);
                 cancel();
             }

@@ -6,7 +6,7 @@ import events.Event;
 
 import java.util.Collection;
 
-public interface GameView {
+public interface GameView extends ChildView {
     void addUp(Event<KeyEventArgs> methodReference);
     void removeUp(Event<KeyEventArgs> methodReference);
     void addDown(Event<KeyEventArgs> methodReference);

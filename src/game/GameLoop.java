@@ -10,8 +10,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class GameLoop implements Callable<Void> {
+    public static final long dt = 1000 / 60;
+
     private final GameWorld gameWorld;
-    private final long dt = 1000 / 30;
     private ScheduledFuture<?> future;
     private boolean isRun;
 

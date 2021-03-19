@@ -52,12 +52,13 @@ public class Field extends GameObject {
         var ballPosition = ball.getPosition();
         var ballPhysics = ball.getPhysics();
         var velocity = ball.getPhysics().getVelocity();
+        var ballAABB = ball.getAABB();
 
         if (ballPosition.getPosition().getY() <= 0){
             velocity.setY(Math.max(velocity.getY(), -velocity.getY()));
             ballPhysics.setVelocity(velocity);
         }
-        else if (ballPosition.getPosition().getY() >= height){
+        else if (ballPosition.getPosition().getY() >= height - ballAABB.getHeight()){
             velocity.setY(Math.min(velocity.getY(), -velocity.getY()));
             ballPhysics.setVelocity(velocity);
         }

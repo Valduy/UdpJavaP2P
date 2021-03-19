@@ -5,7 +5,7 @@ import game.GameObject;
 import pong.Point;
 
 public class PhysicsComponent extends Component {
-    private Point velocity;
+    private Point velocity = new Point();
     private PositionComponent position;
 
     @Override

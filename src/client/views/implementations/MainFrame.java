@@ -10,7 +10,7 @@ public class MainFrame extends JFrame implements MainView {
 
     public MainFrame(){
         super();
-        setSize(600, 450);
+        setSize(610, 500);
         setResizable(false);
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

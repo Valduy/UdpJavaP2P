@@ -3,15 +3,9 @@ package client;
 import client.models.implementations.HolePunchingModel;
 import client.models.implementations.MatchmakerMenuModel;
 import client.models.implementations.TestMessengerModel;
-import client.presenters.implementations.HolePunchingPresenter;
-import client.presenters.implementations.MainPresenter;
-import client.presenters.implementations.MatchmakerMenuPresenter;
-import client.presenters.implementations.TestMessangerPresenter;
+import client.presenters.implementations.*;
 import client.services.implementations.SwingMessageBoxSerivice;
-import client.views.implementations.Loading;
-import client.views.implementations.MainFrame;
-import client.views.implementations.Menu;
-import client.views.implementations.Messenger;
+import client.views.implementations.*;
 
 import javax.swing.*;
 
@@ -22,27 +16,30 @@ public class Main {
 
     private static void initialize(){
         SwingUtilities.invokeLater(() -> {
-            var messageBoxSerivce = new SwingMessageBoxSerivice();
+            var messageBoxService = new SwingMessageBoxSerivice();
 
             var menuView = new Menu();
             var menuModel = new MatchmakerMenuModel();
-            var menuPresenter = new MatchmakerMenuPresenter(menuView, menuModel, messageBoxSerivce);
+            var menuPresenter = new MatchmakerMenuPresenter(menuView, menuModel, messageBoxService);
 
             var loadView = new Loading();
             var loadModel = new HolePunchingModel();
             var loadPresenter = new HolePunchingPresenter(loadView, loadModel);
 
-            var messangerView = new Messenger();
-            var messangerModel = new TestMessengerModel();
-            var messangerPresenter = new TestMessangerPresenter(messangerView, messangerModel, messageBoxSerivce);
+            var hostView = new PongView();
+            var hostPresenter = new HostPongPresenter(hostView, 600, 450);
+
+            var clientView = new PongView();
+            var clientPresenter = new ClientPongPresenter(clientView, 600, 450);
 
             var mainFrame = new MainFrame();
             var mainPresenter = new MainPresenter(
                     mainFrame,
                     menuPresenter,
                     loadPresenter,
-                    messangerPresenter,
-                    messageBoxSerivce);
+                    hostPresenter,
+                    clientPresenter,
+                    messageBoxService);
         });
     }
 }

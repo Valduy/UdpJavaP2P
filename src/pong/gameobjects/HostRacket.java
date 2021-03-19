@@ -1,13 +1,12 @@
 package pong.gameobjects;
 
-import pong.Point;
 import pong.components.InputComponent;
 import pong.components.PhysicsComponent;
 
 public class HostRacket extends RacketBase {
     private final PhysicsComponent physics = new PhysicsComponent();
     private final InputComponent inputs = new InputComponent();
-    private final double velocityMagnitude = 10;
+    private final double velocityMagnitude = 0.05;
 
     private HostBall ball;
 
@@ -44,9 +43,9 @@ public class HostRacket extends RacketBase {
 
     private void processCollisions(){
         if (getAABB().isIntersect(ball.getAABB())){
-            var racketCenter = getAABB().getCenter();
-            var ballCenter = ball.getAABB().getCenter();
-            var direction = ballCenter.sub(racketCenter);
+            var racketCenter = getPosition().getPosition().add(getAABB().getCenter());
+            var ballCenter = ball.getPosition().getPosition().add(ball.getAABB().getCenter());
+            var direction = ballCenter.sub(racketCenter).normalize();
             var newVelocity = direction.mul(ball.getSpeedMagnitude());
             ball.getPhysics().setVelocity(newVelocity);
         }
@@ -54,10 +53,13 @@ public class HostRacket extends RacketBase {
 
     private void processInputs(){
         if (inputs.getIsUp() && !inputs.getIsDown()){
-            physics.setVelocity(new Point(0, -velocityMagnitude));
+            physics.getVelocity().setY(-velocityMagnitude);
         }
-        if (inputs.getIsDown() && inputs.getIsUp()){
-            physics.setVelocity(new Point(0, velocityMagnitude));
+        else if (inputs.getIsDown() && !inputs.getIsUp()){
+            physics.getVelocity().setY(velocityMagnitude);
+        }
+        else {
+            physics.getVelocity().setY(0);
         }
     }
 }

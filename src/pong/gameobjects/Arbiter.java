@@ -40,7 +40,8 @@ public class Arbiter extends GameObject {
                 .findFirst()
                 .get();
 
-        isRestarted = true;
+        isRestarted = false;
+        direction = Direction.Left;
         restartTime = System.currentTimeMillis() + timeToRestart;
     }
 
@@ -56,19 +57,21 @@ public class Arbiter extends GameObject {
     }
 
     private void checkGoals(){
-        var ballAABB = ball.getAABB();
-        var ballPosition = ball.getPosition();
-        var currentPosition = ballPosition.getPosition();
+        if (isRestarted){
+            var ballAABB = ball.getAABB();
+            var ballPosition = ball.getPosition();
+            var currentPosition = ballPosition.getPosition();
 
-        if (currentPosition.getX() >= field.getWidth()){
-            leftScore++;
-            direction = Direction.Right;
-            startRestart();
-        }
-        else if (currentPosition.getX() <= -ballAABB.getWidth()){
-            rightScore++;
-            direction = Direction.Left;
-            startRestart();
+            if (currentPosition.getX() >= field.getWidth()){
+                leftScore++;
+                direction = Direction.Right;
+                startRestart();
+            }
+            else if (currentPosition.getX() <= -ballAABB.getWidth()){
+                rightScore++;
+                direction = Direction.Left;
+                startRestart();
+            }
         }
     }
 

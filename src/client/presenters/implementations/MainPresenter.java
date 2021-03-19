@@ -3,6 +3,7 @@ package client.presenters.implementations;
 import client.presenters.interfaces.LoadPresenter;
 import client.presenters.interfaces.MenuPresenter;
 import client.presenters.interfaces.MessengerPresenter;
+import client.presenters.interfaces.PongPresenter;
 import client.services.interfaces.MessageBoxService;
 import client.views.interfaces.MainView;
 import events.EventArgs;
@@ -11,23 +12,23 @@ public class MainPresenter {
     private final MainView view;
     private final MenuPresenter menuPresenter;
     private final LoadPresenter loadPresenter;
-    //private final FieldPresenter fieldPresenter;
-    private final MessengerPresenter messengerPresenter;
+    private final PongPresenter hostPresenter;
+    private final PongPresenter clientPresenter;
     private final MessageBoxService messageBoxService;
 
     public MainPresenter(
             MainView view,
             MenuPresenter menuPresenter,
             LoadPresenter loadPresenter,
-            //FieldPresenter fieldPresenter,
-            MessengerPresenter messangerPresenter,
+            PongPresenter hostPresenter,
+            PongPresenter clientPresenter,
             MessageBoxService messageBoxService)
     {
         this.view = view;
         this.menuPresenter = menuPresenter;
         this.loadPresenter = loadPresenter;
-        //this.fieldPresenter = fieldPresenter;
-        this.messengerPresenter = messangerPresenter;
+        this.hostPresenter = hostPresenter;
+        this.clientPresenter = clientPresenter;
         this.messageBoxService = messageBoxService;
         view.setComponent(menuPresenter.getView().toComponent());
 
@@ -47,8 +48,18 @@ public class MainPresenter {
 
     private void onConnected(Object sender, EventArgs e){
         try {
-            messengerPresenter.start(menuPresenter.getSocket(), loadPresenter.getConnectionMessage());
-            view.setComponent(messengerPresenter.getView().toComponent());
+            var message = loadPresenter.getConnectionMessage();
+
+            switch (message.role){
+                case Host:
+                    hostPresenter.start(menuPresenter.getSocket(), message.clients);
+                    view.setComponent(hostPresenter.getView().toComponent());
+                    break;
+                case Client:
+                    clientPresenter.start(menuPresenter.getSocket(), message.clients);
+                    view.setComponent(clientPresenter.getView().toComponent());
+                    break;
+            }
         } catch (Exception ex) {
             messageBoxService.showMessageDialog(ex.getMessage());
         }

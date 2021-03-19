@@ -3,20 +3,23 @@ package client.views.implementations;
 import client.KeyEventArgs;
 import client.KeyState;
 import client.shapes.Rectangle;
+import client.views.GameScreen;
 import client.views.interfaces.GameView;
 import events.Event;
 import events.EventHandler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.ActionEvent;
 import java.util.Collection;
 
-public class PongView extends JPanel implements GameView, KeyListener {
-    private Collection<Rectangle> objects;
+public class PongView extends JPanel implements GameView {
+    private final JPanel scorePanel = new JPanel();
+    private final JLabel leftScore = new JLabel();
+    private final JLabel rightScore = new JLabel();
+    private final GameScreen screen = new GameScreen();
 
-    private EventHandler<KeyEventArgs> up = new EventHandler<>();
+    private final EventHandler<KeyEventArgs> up = new EventHandler<>();
 
     @Override
     public void addUp(Event<KeyEventArgs> methodReference) {
@@ -28,7 +31,7 @@ public class PongView extends JPanel implements GameView, KeyListener {
         up.unSubscribe(methodReference);
     }
 
-    private EventHandler<KeyEventArgs> down = new EventHandler<>();
+    private final EventHandler<KeyEventArgs> down = new EventHandler<>();
 
     @Override
     public void addDown(Event<KeyEventArgs> methodReference) {
@@ -40,7 +43,7 @@ public class PongView extends JPanel implements GameView, KeyListener {
         down.unSubscribe(methodReference);
     }
 
-    private EventHandler<KeyEventArgs> canceled = new EventHandler<>();
+    private final EventHandler<KeyEventArgs> canceled = new EventHandler<>();
 
     @Override
     public void addCanceled(Event<KeyEventArgs> methodReference) {
@@ -58,53 +61,80 @@ public class PongView extends JPanel implements GameView, KeyListener {
     }
 
     public PongView(){
-        setBackground(Color.black);
+        init();
+        setUpKeyListeners();
     }
 
     @Override
     public void draw(Collection<Rectangle> objects) {
-        this.objects = objects;
-        repaint();
+        screen.draw(objects);
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-
-        if (objects != null){
-            for (var o : objects){
-                g.setColor(Color.white);
-                g.drawRect((int)o.getX(), (int)o.getY(), (int)o.getWidth(), (int)o.getHeight());
-            }
-        }
+    public JComponent toComponent() {
+        return this;
     }
 
-    @Override
-    public void keyTyped(KeyEvent keyEvent) {
+    private void init(){
+        setLayout(new BorderLayout());
 
+        var grid = new GridLayout(1, 2);
+        scorePanel.setVisible(true);
+        scorePanel.setLayout(grid);
+        add(scorePanel, BorderLayout.NORTH);
+
+        leftScore.setVisible(true);
+        leftScore.setHorizontalAlignment(SwingConstants.CENTER);
+        leftScore.setText("0");
+        scorePanel.add(leftScore);
+
+        rightScore.setVisible(true);
+        rightScore.setHorizontalAlignment(SwingConstants.CENTER);
+        rightScore.setText("0");
+        scorePanel.add(rightScore);
+
+        add(scorePanel, BorderLayout.NORTH);
+
+        screen.setVisible(true);
+        screen.setMinimumSize(new Dimension(600, 450)); // TODO: убрать хардкод
+        add(screen, BorderLayout.CENTER);
     }
 
-    @Override
-    public void keyPressed(KeyEvent keyEvent) {
-        switch (keyEvent.getKeyCode()) {
-            case KeyEvent.VK_W:
+    private void setUpKeyListeners(){
+        getInputMap().put(KeyStroke.getKeyStroke("pressed W"), "wPressed");
+        getActionMap().put("wPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.println("up pressed");
                 up.invoke(this, new KeyEventArgs(KeyState.Pressed));
-                break;
-            case KeyEvent.VK_S:
-                down.invoke(this, new KeyEventArgs(KeyState.Pressed));
-                break;
-        }
-    }
+            }
+        });
 
-    @Override
-    public void keyReleased(KeyEvent keyEvent) {
-        switch (keyEvent.getKeyCode()) {
-            case KeyEvent.VK_W:
+        getInputMap().put(KeyStroke.getKeyStroke("released W"), "wReleased");
+        getActionMap().put("wReleased", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.print("up released");
                 up.invoke(this, new KeyEventArgs(KeyState.Released));
-                break;
-            case KeyEvent.VK_S:
+            }
+        });
+
+        getInputMap().put(KeyStroke.getKeyStroke("pressed S"), "sPressed");
+        getActionMap().put("sPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.println("down pressed");
+                down.invoke(this, new KeyEventArgs(KeyState.Pressed));
+            }
+        });
+
+        getInputMap().put(KeyStroke.getKeyStroke("released S"), "sReleased");
+        getActionMap().put("sReleased", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                System.out.print("down released");
                 down.invoke(this, new KeyEventArgs(KeyState.Released));
-                break;
-        }
+            }
+        });
     }
 }
