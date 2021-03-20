@@ -12,7 +12,6 @@ public class MainFrame extends JFrame implements MainView {
         super();
         setSize(610, 500);
         setResizable(false);
-
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);
     }
@@ -27,5 +26,6 @@ public class MainFrame extends JFrame implements MainView {
         add(component);
         component.setVisible(true);
         validate();
+        repaint();
     }
 }

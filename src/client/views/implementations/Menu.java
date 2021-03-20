@@ -52,7 +52,7 @@ public class Menu extends JComponent implements MenuView {
         searchLabel.setVisible(false);
         add(searchLabel);
 
-        menuPanel.setLayout(new GridLayout(2, 1));
+        menuPanel.setLayout(new GridLayout(3, 1));
         menuPanel.setBorder(BorderFactory.createEmptyBorder(0, 100, 100, 100));
         add(menuPanel);
 

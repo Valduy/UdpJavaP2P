@@ -10,12 +10,16 @@ import client.views.implementations.*;
 import javax.swing.*;
 
 public class Main {
+    private static final int fieldWidth = 600;
+    private static final int fieldHeight = 450;
+
     public static void main(String[] args) {
         initialize();
     }
 
     private static void initialize(){
         SwingUtilities.invokeLater(() -> {
+            var mainFrame = new MainFrame();
             var messageBoxService = new SwingMessageBoxSerivice();
 
             var menuView = new Menu();
@@ -27,12 +31,11 @@ public class Main {
             var loadPresenter = new HolePunchingPresenter(loadView, loadModel);
 
             var hostView = new PongView();
-            var hostPresenter = new HostPongPresenter(hostView, 600, 450);
+            var hostPresenter = new HostPongPresenter(messageBoxService, hostView, fieldWidth, fieldHeight);
 
             var clientView = new PongView();
-            var clientPresenter = new ClientPongPresenter(clientView, 600, 450);
+            var clientPresenter = new ClientPongPresenter(messageBoxService, clientView, fieldWidth, fieldHeight);
 
-            var mainFrame = new MainFrame();
             var mainPresenter = new MainPresenter(
                     mainFrame,
                     menuPresenter,

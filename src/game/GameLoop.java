@@ -55,7 +55,6 @@ public class GameLoop implements Callable<Void> {
         isRun = true;
         var executor = Executors.newSingleThreadScheduledExecutor();
         future = executor.scheduleWithFixedDelay(this::gameFrame, 0, dt, TimeUnit.MILLISECONDS);
-        future.get();
         isRun = false;
         return null;
     }

@@ -2,6 +2,7 @@ package client.presenters.implementations;
 
 import client.ReceiveEventArgs;
 import client.messages.WorldState;
+import client.services.interfaces.MessageBoxService;
 import client.views.interfaces.GameView;
 import com.company.network.EndPoint;
 import com.company.network.MessageHelper;
@@ -33,11 +34,8 @@ public class ClientPongPresenter extends PongPresenterBase{
 
     private final ArrayList<WorldState> worldStates = new ArrayList<>();
 
-    private int leftScore;
-    private int rightScore;
-
-    public ClientPongPresenter(GameView view, double width, double height){
-        super(view, width, height);
+    public ClientPongPresenter(MessageBoxService messageBoxService, GameView view, double width, double height){
+        super(messageBoxService, view, width, height);
     }
 
     @Override
@@ -96,9 +94,15 @@ public class ClientPongPresenter extends PongPresenterBase{
             message = MessageHelper.getMessage(NetworkMessages.INFO, data);
         }
 
-        for (var host : getClients()){
-            var packet = new DatagramPacket(message, message.length, host.address, host.port);
-            getSocket().send(packet);
+        try {
+            for (var host : getClients()){
+                var packet = new DatagramPacket(message, message.length, host.address, host.port);
+                getSocket().send(packet);
+            }
+        } catch (IOException e){
+            if (!getSocket().isClosed()){
+                throw e;
+            }
         }
     }
 
@@ -116,8 +120,8 @@ public class ClientPongPresenter extends PongPresenterBase{
                 var ballPosition = state.positions.get(2);
                 ball.getPosition().setPosition(new Point(ballPosition.x, ballPosition.y));
 
-                leftScore = state.leftScore;
-                rightScore = state.rightScore;
+                setLeftScore(state.leftScore);
+                setRightScore(state.rightScore);
                 worldStates.clear();
             }
         }
@@ -125,6 +129,7 @@ public class ClientPongPresenter extends PongPresenterBase{
 
     @Override
     protected void onReceived(Object sender, ReceiveEventArgs e){
+        super.onReceived(sender, e);
         var data = MessageHelper.toString(e.getReceived());
         var reader = new JsonReader(new StringReader(data));
 

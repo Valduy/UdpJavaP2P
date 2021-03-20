@@ -42,6 +42,7 @@ public class Receiver implements Callable<Void> {
 
     public void cancel() throws IOException {
         isRun = false;
+        socket.close();
     }
 
     private void receiveLoop() throws IOException {
@@ -55,9 +56,15 @@ public class Receiver implements Callable<Void> {
     }
 
     private void receiveFrame() throws IOException {
-        var buffer = new byte[packetSize];
-        var packet = new DatagramPacket(buffer, buffer.length);
-        socket.receive(packet);
-        received.invoke(this, new ReceiveEventArgs(packet.getData()));
+        try{
+            var buffer = new byte[packetSize];
+            var packet = new DatagramPacket(buffer, buffer.length);
+            socket.receive(packet);
+            received.invoke(this, new ReceiveEventArgs(packet.getData()));
+        } catch (IOException e){
+            if (!socket.isClosed()){
+                throw e;
+            }
+        }
     }
 }

@@ -5,7 +5,7 @@ import pong.components.PhysicsComponent;
 public class HostBall extends BallBase {
     private final PhysicsComponent physics = new PhysicsComponent();
 
-    private final double speedMagnitude = 0.05;
+    private final double speedMagnitude = 0.1;
 
     public PhysicsComponent getPhysics(){
         return physics;

@@ -4,6 +4,7 @@ import client.ReceiveEventArgs;
 import client.messages.Inputs;
 import client.messages.Position;
 import client.messages.WorldState;
+import client.services.interfaces.MessageBoxService;
 import client.views.interfaces.GameView;
 import com.company.network.EndPoint;
 import com.company.network.MessageHelper;
@@ -36,9 +37,8 @@ public class HostPongPresenter extends PongPresenterBase{
 
     private final ArrayList<Inputs> clientInputs = new ArrayList<>();
 
-    public HostPongPresenter(GameView view, double width, double height){
-        super(view, width, height);
-        System.out.println("Создаю презентер хоста...");
+    public HostPongPresenter(MessageBoxService messageBoxService, GameView view, double width, double height){
+        super(messageBoxService, view, width, height);
     }
 
     @Override
@@ -89,6 +89,8 @@ public class HostPongPresenter extends PongPresenterBase{
     protected void onUpdated(Object sender, EventArgs e){
         super.onUpdated(sender, e);
         try {
+            setLeftScore(arbiter.getLeftScore());
+            setRightScore(arbiter.getRightScore());
             sendState();
             processInputs();
         } catch (IOException ioException) {
@@ -102,9 +104,15 @@ public class HostPongPresenter extends PongPresenterBase{
         var data = gson.toJson(state);
         var message = MessageHelper.getMessage(NetworkMessages.INFO, data);
 
-        for (var client : getClients()){
-            var packet = new DatagramPacket(message, message.length, client.address, client.port);
-            getSocket().send(packet);
+        try{
+            for (var client : getClients()){
+                var packet = new DatagramPacket(message, message.length, client.address, client.port);
+                getSocket().send(packet);
+            }
+        } catch (IOException e){
+            if (!getSocket().isClosed()){
+                throw e;
+            }
         }
     }
 
@@ -164,6 +172,7 @@ public class HostPongPresenter extends PongPresenterBase{
 
     @Override
     protected void onReceived(Object sender, ReceiveEventArgs e){
+        super.onReceived(sender, e);
         var data = MessageHelper.toString(e.getReceived());
         var reader = new JsonReader(new StringReader(data));
         Inputs inputs = gson.fromJson(reader, Inputs.class);

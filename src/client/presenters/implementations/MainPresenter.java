@@ -34,6 +34,8 @@ public class MainPresenter {
 
         menuPresenter.addConnected(this::onMatchCreated);
         loadPresenter.addConnected(this::onConnected);
+        hostPresenter.addEnded(this::onEnded);
+        clientPresenter.addEnded(this::onEnded);
     }
 
     private void onMatchCreated(Object sender, EventArgs e){
@@ -62,6 +64,11 @@ public class MainPresenter {
             }
         } catch (Exception ex) {
             messageBoxService.showMessageDialog(ex.getMessage());
+            view.setComponent(menuPresenter.getView().toComponent());
         }
+    }
+
+    private void onEnded(Object sender, EventArgs e){
+        view.setComponent(menuPresenter.getView().toComponent());
     }
 }

@@ -6,6 +6,7 @@ import client.ReceiveEventArgs;
 import client.Receiver;
 import client.messages.Inputs;
 import client.presenters.interfaces.PongPresenter;
+import client.services.interfaces.MessageBoxService;
 import client.shapes.Rectangle;
 import client.views.interfaces.ChildView;
 import client.views.interfaces.GameView;
@@ -32,6 +33,7 @@ import java.util.concurrent.Future;
 public abstract class PongPresenterBase implements PongPresenter {
     private class PongTask extends SwingWorker<Void, Object> {
         private final GameLoop loop;
+
         private final EventHandler<EventArgs> updated = new EventHandler<>();
 
         public void addUpdated(Event<EventArgs> methodReference){
@@ -71,12 +73,19 @@ public abstract class PongPresenterBase implements PongPresenter {
     private final GameWorld world = new GameWorld();
     private final Inputs hostInputs = new Inputs();
     private final ArrayList<GameObject> drawable = new ArrayList<>();
+    private final MessageBoxService messageBoxService;
 
     private DatagramSocket socket;
     private Collection<EndPoint> clients;
     private PongTask pongTask;
     private Receiver receiver;
     private Future<?> receiverFuture;
+
+    private int leftScore;
+    private int rightScore;
+    private int allowedFailuresCount;
+    private int actualFailuresCount;
+    private boolean isNotified;
 
     protected final double width;
     protected final double height;
@@ -106,6 +115,30 @@ public abstract class PongPresenterBase implements PongPresenter {
         return view;
     }
 
+    public int getLeftScore(){
+        return leftScore;
+    }
+
+    public void setLeftScore(int leftScore){
+        this.leftScore = leftScore;
+    }
+
+    public int getRightScore(){
+        return rightScore;
+    }
+
+    public void setRightScore(int rightScore){
+        this.rightScore = rightScore;
+    }
+
+    public int getAllowedFailuresCount(){
+        return allowedFailuresCount;
+    }
+
+    public void setAllowedFailuresCount(int allowedFailuresCount){
+        this.allowedFailuresCount = allowedFailuresCount;
+    }
+
     private final EventHandler<EventArgs> ended = new EventHandler<>();
 
     public void addEnded(Event<EventArgs> methodReference){
@@ -116,17 +149,21 @@ public abstract class PongPresenterBase implements PongPresenter {
         ended.unSubscribe(methodReference);
     }
 
-    public PongPresenterBase(GameView view, double width, double height){
+    public PongPresenterBase(MessageBoxService messageBoxService, GameView view, double width, double height){
+        this.messageBoxService = messageBoxService;
         this.view = view;
         this.width = width;
         this.height = height;
         initWorld(world);
         view.setFieldSize((int)width, (int)height);
+        allowedFailuresCount = 10;
     }
 
     public void start(DatagramSocket socket, Collection<EndPoint> clients) throws IOException {
         this.socket = socket;
         this.clients = clients;
+        isNotified = false;
+        actualFailuresCount = 0;
         resetWorld(world);
         view.addUp(this::onUp);
         view.addDown(this::onDown);
@@ -145,7 +182,7 @@ public abstract class PongPresenterBase implements PongPresenter {
     }
 
     protected void removeDrawable(GameObject go){
-
+        drawable.remove(go);
     }
 
     protected abstract void initWorld(GameWorld world);
@@ -153,12 +190,17 @@ public abstract class PongPresenterBase implements PongPresenter {
 
     protected void onUpdated(Object sender, EventArgs e){
         //System.out.printf("Обновляю состояние мира (%s)...\n", System.currentTimeMillis());
-        Draw();
+        draw();
+        updateScore();
+        checkFailures();
     }
 
-    protected abstract void onReceived(Object sender, ReceiveEventArgs e);
+    protected void onReceived(Object sender, ReceiveEventArgs e){
+        actualFailuresCount = 0;
+        isNotified = false;
+    }
 
-    private void Draw(){
+    private void draw(){
         var toDraw = new ArrayList<Rectangle>();
 
         for (var go : drawable){
@@ -169,6 +211,19 @@ public abstract class PongPresenterBase implements PongPresenter {
         }
 
         view.draw(toDraw);
+    }
+
+    private void updateScore(){
+        view.setScore(leftScore, rightScore);
+    }
+
+    private void checkFailures(){
+        actualFailuresCount++;
+
+        if (!isNotified && actualFailuresCount >= allowedFailuresCount){
+            isNotified = true;
+            messageBoxService.showMessageDialog("Кажется, оппонент отключился...");
+        }
     }
 
     private void onUp(Object sender, KeyEventArgs e){
@@ -187,14 +242,23 @@ public abstract class PongPresenterBase implements PongPresenter {
         view.removeUp(this::onUp);
         view.removeDown(this::onDown);
         view.removeCanceled(this::onCanceled);
-        pongTask.cancel();
+
+        try {
+            pongTask.cancel();
+            pongTask.get();
+        } catch (InterruptedException interruptedException) {
+            interruptedException.printStackTrace();
+        } catch (ExecutionException executionException) {
+            executionException.printStackTrace();
+        }
 
         try {
             receiver.cancel();
             receiverFuture.get();
         } catch (IOException ioException) {
-            // TODO
-            ioException.printStackTrace();
+            if (!getSocket().isClosed()){
+                ioException.printStackTrace();
+            }
         } catch (InterruptedException interruptedException) {
             interruptedException.printStackTrace();
         } catch (ExecutionException executionException) {
