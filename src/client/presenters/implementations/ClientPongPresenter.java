@@ -46,9 +46,9 @@ public class ClientPongPresenter extends PongPresenterBase{
 
     @Override
     protected void initWorld(GameWorld world){
-        leftRacket = new HostRacket();
-        rightRacket = new HostRacket();
-        ball = new HostBall();
+        leftRacket = new RacketBase();
+        rightRacket = new RacketBase();
+        ball = new BallBase();
 
         world.addGameObject(leftRacket);
         world.addGameObject(rightRacket);

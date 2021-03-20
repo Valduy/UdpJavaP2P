@@ -15,6 +15,5 @@ public interface GameView extends ChildView {
     void addCanceled(Event<EventArgs> methodReference);
     void removeCanceled(Event<EventArgs> methodReference);
     void setFieldSize(int width, int height);
-    void setScore(int left, int right);
-    void draw(Collection<Rectangle> objects);
+    void draw(Collection<Rectangle> objects, int leftScore, int rightScore);
 }

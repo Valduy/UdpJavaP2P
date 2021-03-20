@@ -30,10 +30,10 @@ public class Main {
             var loadModel = new HolePunchingModel();
             var loadPresenter = new HolePunchingPresenter(loadView, loadModel);
 
-            var hostView = new PongView();
+            var hostView = new PongView(fieldWidth, fieldHeight);
             var hostPresenter = new HostPongPresenter(messageBoxService, hostView, fieldWidth, fieldHeight);
 
-            var clientView = new PongView();
+            var clientView = new PongView(fieldWidth, fieldHeight);
             var clientPresenter = new ClientPongPresenter(messageBoxService, clientView, fieldWidth, fieldHeight);
 
             var mainPresenter = new MainPresenter(

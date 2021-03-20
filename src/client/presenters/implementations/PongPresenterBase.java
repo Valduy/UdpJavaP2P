@@ -89,8 +89,8 @@ public abstract class PongPresenterBase implements PongPresenter {
 
     protected final double width;
     protected final double height;
-    protected final double ballSize = 10;
-    protected final double racketHeight = ballSize * 2;
+    protected final double ballSize = 20;
+    protected final double racketHeight = ballSize * 3;
     protected final double racketWidth = ballSize;
     protected final double indent = ballSize;
 
@@ -156,7 +156,7 @@ public abstract class PongPresenterBase implements PongPresenter {
         this.height = height;
         initWorld(world);
         view.setFieldSize((int)width, (int)height);
-        allowedFailuresCount = 10;
+        allowedFailuresCount = 30;
     }
 
     public void start(DatagramSocket socket, Collection<EndPoint> clients) throws IOException {
@@ -191,7 +191,7 @@ public abstract class PongPresenterBase implements PongPresenter {
     protected void onUpdated(Object sender, EventArgs e){
         //System.out.printf("Обновляю состояние мира (%s)...\n", System.currentTimeMillis());
         draw();
-        updateScore();
+        //updateScore();
         checkFailures();
     }
 
@@ -210,11 +210,7 @@ public abstract class PongPresenterBase implements PongPresenter {
             toDraw.add(rectangle);
         }
 
-        view.draw(toDraw);
-    }
-
-    private void updateScore(){
-        view.setScore(leftScore, rightScore);
+        view.draw(toDraw, leftScore, rightScore);
     }
 
     private void checkFailures(){

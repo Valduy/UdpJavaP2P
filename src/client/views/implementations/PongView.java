@@ -3,7 +3,6 @@ package client.views.implementations;
 import client.KeyEventArgs;
 import client.KeyState;
 import client.shapes.Rectangle;
-import client.views.GameScreen;
 import client.views.interfaces.GameView;
 import events.Event;
 import events.EventArgs;
@@ -16,13 +15,15 @@ import java.awt.event.ActionListener;
 import java.util.Collection;
 
 public class PongView extends JPanel implements GameView {
-    private final JPanel scorePanel = new JPanel();
-    private final JLabel leftScore = new JLabel();
-    private final JLabel rightScore = new JLabel();
-    private final GameScreen screen = new GameScreen();
     private final JPanel menu = new JPanel();
     private final JButton quitButton = new JButton();
 
+    private final int fieldWidth;
+    private final int fieldHeight;
+
+    private Collection<Rectangle> objects;
+    private int leftScore;
+    private int rightScore;
     private boolean isMenuShown;
 
     private final EventHandler<KeyEventArgs> up = new EventHandler<>();
@@ -66,21 +67,20 @@ public class PongView extends JPanel implements GameView {
         setSize(new Dimension(width, height));
     }
 
-    @Override
-    public void setScore(int left, int right){
-        System.out.printf("left: %s right: %s\n", left, right);
-        leftScore.setText(Integer.toString(left));
-        rightScore.setText(Integer.toString(right));
-    }
-
-    public PongView(){
+    public PongView(int fieldWidth, int fieldHeight){
+        this.fieldWidth = fieldWidth;
+        this.fieldHeight = fieldHeight;
         init();
         setUpKeyListeners();
     }
 
     @Override
-    public void draw(Collection<Rectangle> objects) {
-        screen.draw(objects);
+    public void draw(Collection<Rectangle> objects, int leftScore, int rightScore) {
+        this.objects = objects;
+        this.leftScore = leftScore;
+        this.rightScore = rightScore;
+        revalidate();
+        repaint();
     }
 
     @Override
@@ -88,29 +88,21 @@ public class PongView extends JPanel implements GameView {
         return this;
     }
 
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        var g2d = setUpGraphics(g);
+        g2d.setColor(Color.gray);
+        drawScore(g2d);
+        drawLine(g2d);
+        g.setColor(Color.white);
+        drawObjects(g);
+    }
+
     private void init(){
-        setLayout(new BorderLayout());
-
-        var grid = new GridLayout(1, 2);
-        scorePanel.setVisible(true);
-        scorePanel.setLayout(grid);
-        add(scorePanel, BorderLayout.NORTH);
-
-        leftScore.setVisible(true);
-        leftScore.setHorizontalAlignment(SwingConstants.CENTER);
-        leftScore.setText("0");
-        scorePanel.add(leftScore);
-
-        rightScore.setVisible(true);
-        rightScore.setHorizontalAlignment(SwingConstants.CENTER);
-        rightScore.setText("0");
-        scorePanel.add(rightScore);
-
-        add(scorePanel, BorderLayout.NORTH);
-
-        screen.setVisible(true);
-        screen.setMinimumSize(new Dimension(600, 450)); // TODO: убрать хардкод
-        add(screen, BorderLayout.CENTER);
+        setBackground(Color.black);
+        setLayout(new GridLayout(1, 1));
+        setMinimumSize(new Dimension(fieldWidth, fieldHeight));
 
         quitButton.setText("Покинуть матч");
         quitButton.addActionListener(new ActionListener() {
@@ -127,8 +119,7 @@ public class PongView extends JPanel implements GameView {
         menu.setBorder(BorderFactory.createEmptyBorder(200, 200, 200, 200));
         menu.add(quitButton);
 
-        screen.setLayout(new GridLayout(1, 1));
-        screen.add(menu);
+        add(menu);
         menu.setVisible(false);
     }
 
@@ -184,5 +175,54 @@ public class PongView extends JPanel implements GameView {
                 isMenuShown = !isMenuShown;
             }
         });
+    }
+
+    private Graphics2D setUpGraphics(Graphics g){
+        var g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        return g2d;
+    }
+
+    private void drawScore(Graphics2D g2d){
+        var font = new Font("RIBBON", Font.PLAIN, getHeight() / 3);
+        var metrics = g2d.getFontMetrics(font);
+        g2d.setFont(font);
+
+        var left = leftScore < 100 ? Integer.toString(leftScore) : "?";
+        var leftWidth = metrics.stringWidth(left);
+
+        g2d.drawString(
+                left,
+                (getWidth() / 2 - leftWidth) / 2,
+                (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent());
+
+        var right = rightScore < 100 ? Integer.toString(rightScore) : "?";
+        var rightWidth = metrics.stringWidth(right);
+
+        g2d.drawString(
+                right,
+                (int)(1.5 * getWidth() - rightWidth) / 2,
+                (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent());
+    }
+
+    private void drawLine(Graphics2D g2d){
+        var dashed = new BasicStroke(
+                9,
+                BasicStroke.CAP_ROUND,
+                BasicStroke.JOIN_ROUND,
+                9,
+                new float[]{27},
+                0);
+        g2d.setStroke(dashed);
+        g2d.drawLine(getWidth() / 2, 0, getWidth() / 2, getHeight());
+    }
+
+    private void drawObjects(Graphics g){
+        if (objects != null){
+            for (var o : objects){
+                g.fillRoundRect((int)o.getX(), (int)o.getY(), (int)o.getWidth(), (int)o.getHeight(), 20, 20);
+            }
+        }
     }
 }
