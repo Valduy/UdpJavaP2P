@@ -191,7 +191,6 @@ public abstract class PongPresenterBase implements PongPresenter {
     protected void onUpdated(Object sender, EventArgs e){
         //System.out.printf("Обновляю состояние мира (%s)...\n", System.currentTimeMillis());
         draw();
-        //updateScore();
         checkFailures();
     }
 

@@ -9,10 +9,7 @@ import com.company.server.matches.MatchException;
 import events.EventArgs;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -61,9 +58,11 @@ public class Matchmaker implements Callable<Void> {
 
     private void tryCreateSocket() throws MatchmakerException {
         try {
-            socket = new DatagramSocket(port);
+            socket = new DatagramSocket(port, InetAddress.getByName("0.0.0.0"));
         } catch (SocketException e) {
             throw new MatchmakerException("Не удалось открыть сокет.", e);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
         }
     }
 

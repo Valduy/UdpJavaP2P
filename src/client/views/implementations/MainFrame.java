@@ -8,9 +8,9 @@ import java.awt.*;
 public class MainFrame extends JFrame implements MainView {
     private JComponent component;
 
-    public MainFrame(){
+    public MainFrame(int width, int height){
         super();
-        setSize(610, 500);
+        setSize(width, height);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setVisible(true);

@@ -10,6 +10,7 @@ import com.company.network.EndPoint;
 import com.company.network.MessageHelper;
 import com.company.network.NetworkMessages;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import events.EventArgs;
 import game.GameWorld;
@@ -174,11 +175,17 @@ public class HostPongPresenter extends PongPresenterBase{
     protected void onReceived(Object sender, ReceiveEventArgs e){
         super.onReceived(sender, e);
         var data = MessageHelper.toString(e.getReceived());
-        var reader = new JsonReader(new StringReader(data));
-        Inputs inputs = gson.fromJson(reader, Inputs.class);
 
-        synchronized (clientInputs){
-            clientInputs.add(inputs);
+        try {
+            var reader = new JsonReader(new StringReader(data));
+            Inputs inputs = gson.fromJson(reader, Inputs.class);
+
+            synchronized (clientInputs){
+                clientInputs.add(inputs);
+            }
+        } catch (JsonSyntaxException ex){
+            System.out.printf("Получен некорректный json: %s.\n", data);
         }
+
     }
 }

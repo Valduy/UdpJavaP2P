@@ -140,7 +140,7 @@ public class ClientPongPresenter extends PongPresenterBase{
                 worldStates.add(state);
             }
         } catch (JsonSyntaxException ex){
-            System.out.printf("Получен некорректный json: %s", data);
+            System.out.printf("Получен некорректный json: %s\n", data);
         }
     }
 }
